@@ -143,7 +143,7 @@ levels from rules you can read. [Metrics](docs/metrics.md) explains each one and
 | [Data format](docs/data-format.md) | Input fields, CSV, field names from other frameworks, format errors |
 | [Results](docs/results.md) | Result JSON and CSV, per-verdict units, repeated-run statistics, cost |
 | [Python API](docs/python-api.md) | `evaluate`, `aevaluate`, samples, results |
-| [Glossary](docs/glossary.md) | How English prompt terms are translated into Korean (in Korean) |
+| [Glossary](docs/glossary.md) | How English prompt terms are translated into Korean |
 
 ## Project status
 

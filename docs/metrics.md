@@ -45,7 +45,7 @@ evaluation for Korean:
 | The judge reads English few-shot examples while judging Korean text | Few-shot examples are rewritten as Korean sentences, keeping the original number of examples and mix of verdicts |
 | TruLens splits Korean answers with an English sentence tokenizer (nltk) | Sentences are split with a Korean morphological analyzer (kiwipiepy) |
 | Explanations come back in mixed styles | Explanations use a consistent polite style; extracted statements use a plain declarative style |
-| The same concept is translated differently by each framework | A shared [glossary](glossary.md) (in Korean) keeps terms consistent across the three frameworks |
+| The same concept is translated differently by each framework | A shared [glossary](glossary.md) keeps terms consistent across the three frameworks |
 
 ## Upstream metrics
 

@@ -143,7 +143,7 @@ result.to_json("result.json")
 | [데이터 형식](docs/data-format.ko.md) | 입력 필드, CSV, 다른 프레임워크의 필드 이름, 형식 오류 |
 | [결과](docs/results.ko.md) | 결과 JSON과 CSV, 판정 단위, 반복 실행 통계, 비용 |
 | [Python API](docs/python-api.ko.md) | `evaluate`, `aevaluate`, 샘플, 결과 |
-| [용어 대역표](docs/glossary.md) | 영어 프롬프트 용어를 한국어로 옮긴 기준 |
+| [용어 대역표](docs/glossary.ko.md) | 영어 프롬프트 용어를 한국어로 옮긴 기준 |
 
 ## 현재 상태
 

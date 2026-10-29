@@ -1,105 +1,108 @@
-# 용어 대역표
+# Glossary
 
-9개 지표의 원본 프롬프트를 한국어로 옮길 때 쓰는 기준입니다.
-원본: Ragas v0.4.3, DeepEval 4.3.1, TruLens 2.16.0 (커밋은 THIRD_PARTY_NOTICES.md 참고)
+**English | [한국어](glossary.ko.md)**
 
-## 1. 번역 원칙
+The rules for translating the original prompts of the nine upstream metrics into Korean.
+Sources: Ragas v0.4.3, DeepEval 4.3.1 and TruLens 2.16.0 (commits in [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)).
 
-| 원칙 | 내용 |
+## 1. Principles
+
+| Principle | Rule |
 |---|---|
-| 1:1 대응 | 원문에서 다른 단어는 번역에서도 다른 단어로 옮긴다. 예: answer 는 답변, response 는 응답 |
-| 프레임워크별 용어 유지 | 같은 대상이라도 프레임워크마다 부르는 이름이 다르면 그 차이를 살린다. 예: RAGAS question, DeepEval input, TruLens USER QUERY |
-| 의미 우선 | 직역이 어색하면 뜻을 살려 옮기되, 판정 기준을 넓히거나 좁히지 않는다 |
-| 인칭 유지 | 원문이 2인칭이면 "당신은 ...입니다", 1인칭이면 "저는 ...하겠습니다"로 옮긴다 (RAGAS ContextRelevance 두 번째 판정 프롬프트가 1인칭) |
-| 문체 | 지시문은 "~하세요" 체로 통일한다 |
-| 출력 문체 | 판정 이유와 설명, few-shot 예시의 이유는 "~습니다" 체 존댓말. 진술, 주장, 사실 같은 판정 단위는 원본처럼 "~이다" 체 (다음 단계에서 글자 그대로 다시 받아 적기 때문). 예시 문맥은 실제 문서처럼 "~한다" 체. 원본에 이유 예시가 없는 프롬프트에는 문체 지시 한 줄을 넣는다 (`src/chaejeom/metrics/style.py`) |
-| 강조 | 원문의 대문자 강조(MUST, STRICTLY, ONLY, NEVER)는 "반드시", "오직", "절대" 같은 한국어 강조어로 옮긴다. 원문에 있는 `**` 구분선은 그대로 둔다 |
-| 키 병기 | 본문에서 JSON 키를 가리키는 말은 처음 한 번 "한국어(영어 키)"로 병기한다. 예: 판정(verdict) |
-| few-shot 예시 | 한국어로 새로 쓰되 원본 예시의 개수와 판정 분포를 유지한다. 예: RAGAS Faithfulness 판정 예시는 진술 4개 중 1이 1개, 0이 3개 |
+| One to one | Words that differ in the original stay different in Korean. For example, answer is 답변 and response is 응답 |
+| Keep each framework's terms | When frameworks name the same thing differently, keep the difference. For example, RAGAS question, DeepEval input, TruLens USER QUERY |
+| Meaning first | When a literal translation reads badly, translate the meaning, without widening or narrowing the judging criteria |
+| Keep the person | A second-person original becomes "당신은 ...입니다" and a first-person one "저는 ...하겠습니다" (the second RAGAS ContextRelevance judge prompt is first person) |
+| Instruction style | Instructions use the "하세요" form throughout |
+| Output style | Reasons, explanations and the reasons in few-shot examples use the polite "습니다" form. Judging units such as statements, claims and truths keep the plain "이다" form of the original, because the next step copies them word for word. Example contexts use the "한다" form, like real documents. Prompts whose original has no example reason get one line that sets the style (`src/chaejeom/metrics/style.py`) |
+| Emphasis | Capitalized emphasis in the original (MUST, STRICTLY, ONLY, NEVER) becomes a Korean intensifier such as "반드시", "오직" or "절대". `**` separators in the original stay |
+| Key names | Where the text refers to a JSON key, the first mention gives both, as "Korean (English key)". For example, 판정(verdict) |
+| Few-shot examples | Rewritten in Korean, keeping the original number of examples and mix of verdicts. For example, the RAGAS Faithfulness verdict example has four statements, one marked 1 and three marked 0 |
 
-## 2. 번역하지 않는 것
+## 2. Not translated
 
-| 대상 | 예 | 이유 |
+| What | Examples | Why |
 |---|---|---|
-| JSON 키 | `statements`, `verdict`, `reason`, `claims`, `truths`, `verdicts`, `statement`, `rating`, `question`, `noncommittal`, `criteria`, `supporting_evidence`, `score` | 구조화 출력 파싱 |
-| 판정 라벨 | `yes`, `no`, `borderline`, `0`, `1`, `2`, `3` | 집계식이 이 값을 그대로 씀 |
-| TruLens 출력 라벨 | `Criteria:`, `Supporting Evidence:`, `Score:` | 응답에서 이 문자열을 찾아 파싱함. JSON 키와 같은 기계용 표시로 보고 원본 파싱 로직을 그대로 쓰기 위해 영어 유지. 라벨 뒤 내용은 한국어 |
-| 특수 값 | `NOTHING FOUND`, `ABSTENTION` | TruLens Groundedness 의 supporting_evidence 값 |
-| 템플릿 변수 | `{{ claims }}`, `{premise}`, `{max_score}` 등 | 코드에서 치환 |
-| 지표 이름 | Faithfulness, ContextRelevance, ResponseRelevancy, ContextualRelevancy, AnswerRelevancy, Groundedness, Context Relevance, Answer Relevance | 원본 지표를 가리키는 고유 이름 |
+| JSON keys | `statements`, `verdict`, `reason`, `claims`, `truths`, `verdicts`, `statement`, `rating`, `question`, `noncommittal`, `criteria`, `supporting_evidence`, `score` | Parsed as structured output |
+| Verdict labels | `yes`, `no`, `borderline`, `0`, `1`, `2`, `3` | The aggregation formulas use these values as they are |
+| TruLens output labels | `Criteria:`, `Supporting Evidence:`, `Score:` | The response is parsed by looking for these strings. They are treated as machine markers, like JSON keys, so the upstream parser can be used unchanged. The text after each label is in Korean |
+| Special values | `NOTHING FOUND`, `ABSTENTION` | Values of supporting_evidence in TruLens Groundedness |
+| Template variables | `{{ claims }}`, `{premise}`, `{max_score}` and others | Filled in by code |
+| Metric names | Faithfulness, ContextRelevance, ResponseRelevancy, ContextualRelevancy, AnswerRelevancy, Groundedness, Context Relevance, Answer Relevance | Proper names of the upstream metrics |
 
-## 3. 평가 대상
+## 3. What is evaluated
 
-| 원어 | 번역 | 뜻 | 쓰이는 곳 |
+| Original | Korean | Meaning | Used in |
 |---|---|---|---|
-| question | 질문 | 사용자가 한 질문 | RAGAS Faithfulness, ContextRelevance |
-| answer | 답변 | 평가할 RAG 답변 | RAGAS Faithfulness, ResponseRelevancy |
-| response | 응답 | 평가할 RAG 답변 | RAGAS ResponseRelevancy 입력 필드, TruLens RESPONSE |
-| input | 입력 | 사용자 입력 | DeepEval AnswerRelevancy, ContextualRelevancy |
-| actual output | 실제 출력 | 평가할 AI 출력 | DeepEval |
-| AI output | AI 출력 | 평가할 AI 출력 | DeepEval Faithfulness |
-| text | 텍스트 | 분해할 대상 글 | DeepEval |
-| context | 문맥 | 검색된 문서 | 공통 |
-| retrieval context | 검색 문맥 | 검색된 문서 | DeepEval |
-| SOURCE | 근거 자료 | 검색된 문서 | TruLens Groundedness |
-| STATEMENT | 진술 | 판정할 답변 문장 | TruLens Groundedness |
-| USER QUERY | 사용자 질의 | 사용자 질문 | TruLens Context Relevance |
-| SEARCH RESULT | 검색 결과 | 검색된 문서 조각 | TruLens Context Relevance |
-| PROMPT | 프롬프트 | 에이전트에 들어간 입력 | TruLens Answer Relevance |
+| question | 질문 | The user's question | RAGAS Faithfulness, ContextRelevance |
+| answer | 답변 | The RAG answer under evaluation | RAGAS Faithfulness, ResponseRelevancy |
+| response | 응답 | The RAG answer under evaluation | RAGAS ResponseRelevancy input field, TruLens RESPONSE |
+| input | 입력 | The user input | DeepEval AnswerRelevancy, ContextualRelevancy |
+| actual output | 실제 출력 | The AI output under evaluation | DeepEval |
+| AI output | AI 출력 | The AI output under evaluation | DeepEval Faithfulness |
+| text | 텍스트 | The text to break down | DeepEval |
+| context | 문맥 | A retrieved document | All |
+| retrieval context | 검색 문맥 | A retrieved document | DeepEval |
+| SOURCE | 근거 자료 | A retrieved document | TruLens Groundedness |
+| STATEMENT | 진술 | An answer sentence to judge | TruLens Groundedness |
+| USER QUERY | 사용자 질의 | The user's question | TruLens Context Relevance |
+| SEARCH RESULT | 검색 결과 | A retrieved chunk | TruLens Context Relevance |
+| PROMPT | 프롬프트 | The input given to the agent | TruLens Answer Relevance |
 
-TruLens 의 대문자 라벨은 번역한 뒤에도 시스템 프롬프트와 사용자 프롬프트에서 같은 한국어 라벨로 맞춘다. 예: `USER QUERY:` 는 `사용자 질의:`
+The capitalized TruLens labels use the same Korean label in the system prompt and the user prompt. For example,
+`USER QUERY:` becomes `사용자 질의:` in both.
 
-## 4. 판정 단위
+## 4. Judging units
 
-| 원어 | 번역 | 뜻 | 쓰이는 곳 |
+| Original | Korean | Meaning | Used in |
 |---|---|---|---|
-| statement | 진술 | 답변이나 문맥을 쪼갠 단위 | RAGAS Faithfulness, DeepEval AnswerRelevancy, ContextualRelevancy, TruLens |
-| claim | 주장 | 답변에서 뽑은 사실 단위 | DeepEval Faithfulness |
-| truth | 사실 | 문맥에서 뽑은 사실 단위 | DeepEval Faithfulness |
-| fact | 사실 정보 | 문맥에 담긴 정보 | DeepEval Faithfulness |
-| sentence | 문장 | 문장 분리 단위 | RAGAS, TruLens |
-| contradiction | 모순 | 문맥과 어긋나는 주장 | DeepEval Faithfulness |
-| irrelevant statement | 관련 없는 진술 | 질문과 무관한 진술 | DeepEval |
+| statement | 진술 | A unit split from the answer or a context | RAGAS Faithfulness, DeepEval AnswerRelevancy, ContextualRelevancy, TruLens |
+| claim | 주장 | A factual unit taken from the answer | DeepEval Faithfulness |
+| truth | 사실 | A factual unit taken from the contexts | DeepEval Faithfulness |
+| fact | 사실 정보 | Information in the contexts | DeepEval Faithfulness |
+| sentence | 문장 | A unit of sentence splitting | RAGAS, TruLens |
+| contradiction | 모순 | A claim at odds with the contexts | DeepEval Faithfulness |
+| irrelevant statement | 관련 없는 진술 | A statement unrelated to the question | DeepEval |
 
-## 5. 판정과 척도
+## 5. Verdicts and scales
 
-| 원어 | 번역 | 뜻 | 쓰이는 곳 |
+| Original | Korean | Meaning | Used in |
 |---|---|---|---|
-| verdict | 판정 | 단위별 판정 결과 | 공통 |
-| reason | 이유 | 판정 근거 설명 | 공통 |
-| score | 점수 | 최종 또는 단위 점수 | 공통 |
-| relevance score | 관련성 점수 | RAGAS 0/1/2 점수 | RAGAS ContextRelevance |
-| criteria | 기준 | 채점 기준 | TruLens |
-| supporting evidence | 뒷받침 근거 | 점수를 매긴 근거 문장 | TruLens |
-| faithfulness | 충실성 | 문맥에 충실한 정도 | RAGAS, DeepEval 본문 |
-| groundedness | 근거성 | 근거 자료가 뒷받침하는 정도 | TruLens, 축 이름 |
-| relevance | 관련성 | 질문과 맞닿은 정도 | 공통, 축 이름 |
-| relevant / irrelevant | 관련 있는 / 관련 없는 | | 공통 |
-| directly inferred | 직접 추론할 수 있는 | 문맥만으로 이끌어 낼 수 있음 | RAGAS Faithfulness |
-| contradict | 모순되다 | 문맥과 어긋남 | DeepEval Faithfulness |
-| agree with | 일치하다 | 문맥과 맞음 | DeepEval Faithfulness |
+| verdict | 판정 | The verdict for one unit | All |
+| reason | 이유 | The explanation behind a verdict | All |
+| score | 점수 | The final score or a unit's score | All |
+| relevance score | 관련성 점수 | The RAGAS 0, 1 or 2 rating | RAGAS ContextRelevance |
+| criteria | 기준 | The grading criteria | TruLens |
+| supporting evidence | 뒷받침 근거 | The sentences a score is based on | TruLens |
+| faithfulness | 충실성 | How faithful the answer is to the contexts | RAGAS, DeepEval prompt text |
+| groundedness | 근거성 | How well the sources support the answer | TruLens, axis name |
+| relevance | 관련성 | How closely something addresses the question | All, axis name |
+| relevant / irrelevant | 관련 있는 / 관련 없는 | | All |
+| directly inferred | 직접 추론할 수 있는 | Derivable from the contexts alone | RAGAS Faithfulness |
+| contradict | 모순되다 | To be at odds with the contexts | DeepEval Faithfulness |
+| agree with | 일치하다 | To match the contexts | DeepEval Faithfulness |
 | partially | 부분적으로 | | RAGAS ContextRelevance |
-| prior knowledge | 사전 지식 | 모델이 원래 알던 지식 | 공통 |
-| noncommittal | 회피성 | 답을 피하는 성질 | RAGAS ResponseRelevancy |
+| prior knowledge | 사전 지식 | What the model already knew | All |
+| noncommittal | 회피성 | Avoiding a definite answer | RAGAS ResponseRelevancy |
 | evasive | 회피하는 | | RAGAS ResponseRelevancy |
 | vague | 모호한 | | RAGAS ResponseRelevancy |
-| ambiguous | 애매한 | | RAGAS ResponseRelevancy, DeepEval borderline 설명 |
-| substantive | 실질적인 | 내용이 있는 | RAGAS ResponseRelevancy, TruLens Trivial |
-| abstention | 답변 유보 | "모르겠습니다" 같은 응답 | TruLens Groundedness |
+| ambiguous | 애매한 | | RAGAS ResponseRelevancy, DeepEval borderline description |
+| substantive | 실질적인 | Having real content | RAGAS ResponseRelevancy, TruLens Trivial |
+| abstention | 답변 유보 | A response such as "I don't know" | TruLens Groundedness |
 | trivial pleasantries | 의례적인 인사말 | | TruLens Trivial |
-| stylistic | 문체적인 | 내용 없이 형식만 있는 | TruLens Trivial |
-| entailment | 함의 | 근거 자료가 진술을 함축함 | TruLens Groundedness |
+| stylistic | 문체적인 | Form without content | TruLens Trivial |
+| entailment | 함의 | The source implies the statement | TruLens Groundedness |
 | information overlap | 정보 겹침 | | TruLens Groundedness |
-| false positive | 거짓 양성 | 근거가 없는데 높은 점수를 줌 | TruLens Groundedness |
+| false positive | 거짓 양성 | A high score with no support | TruLens Groundedness |
 | full mark | 만점 | | TruLens Context Relevance |
 | intermediate score | 중간 점수 | | TruLens Context Relevance |
 
-### 지표를 옮기며 추가한 용어
+### Terms added while porting the metrics
 
-| 원어 | 번역 | 쓰이는 곳 |
+| Original | Korean | Used in |
 |---|---|---|
-| rating | 등급 | RAGAS ContextRelevance 필드 설명 (relevance score 의 "관련성 점수"와 구분) |
-| Question / Context (대문자) | 질문(Question) / 문맥(Context) | RAGAS ContextRelevance |
+| rating | 등급 | RAGAS ContextRelevance field description (kept apart from 관련성 점수 for relevance score) |
+| Question / Context (capitalized) | 질문(Question) / 문맥(Context) | RAGAS ContextRelevance |
 | generated question | 역질문 | RAGAS ResponseRelevancy |
 | coherent | 앞뒤가 맞는 | DeepEval Faithfulness |
 | undisputed | 논란의 여지가 없는 | DeepEval Faithfulness |
@@ -109,36 +112,36 @@ TruLens 의 대문자 라벨은 번역한 뒤에도 시스템 프롬프트와 �
 | high level information | 상위 수준의 정보 | DeepEval ContextualRelevancy |
 | supporting information | 보조 정보 | DeepEval AnswerRelevancy |
 | parseable JSON | 파싱 가능한 JSON | DeepEval |
-| (Ambiguous) | (애매함) | DeepEval Faithfulness 이유 생성 |
+| (Ambiguous) | (애매함) | DeepEval Faithfulness reason generation |
 | entity | 개체 | TruLens Context Relevance |
 | tangentially related | 간접적으로 관련된 | TruLens Context Relevance |
 | search phrase | 검색어, 검색 문장 | TruLens Context Relevance |
 | rubric | 채점 기준표 | TruLens Answer Relevance |
 
-## 6. 판정자 역할
+## 6. Judge roles
 
-| 원어 | 번역 | 쓰이는 곳 |
+| Original | Korean | Used in |
 |---|---|---|
 | expert | 전문가 | RAGAS ContextRelevance |
 | classifier | 분류기 | TruLens Groundedness |
 | grader | 채점자 | TruLens Context Relevance, Answer Relevance |
-| rater | 평가자 | TruLens Context Relevance (CoT 프롬프트) |
-| judge (units.type) | 판정 프롬프트 | RAGAS ContextRelevance 의 판정 프롬프트 2개 |
+| rater | 평가자 | TruLens Context Relevance (chain-of-thought prompt) |
+| judge (units.type) | 판정 프롬프트 | The two judge prompts of RAGAS ContextRelevance |
 
-## 7. 프롬프트 틀 표현
+## 7. Prompt template phrases
 
-| 원문 | 번역 | 쓰이는 곳 |
+| Original | Korean | Used in |
 |---|---|---|
-| Example 1 / Input / Output | 예시 1 / 입력 / 출력 | RAGAS 프롬프트 틀 |
-| --------EXAMPLES----------- | --------예시----------- | RAGAS 프롬프트 틀 |
-| Now perform the same with the following input | 이제 다음 입력에 대해 같은 작업을 수행하세요 | RAGAS 프롬프트 틀 |
-| Please return the output in a JSON format that complies with the following schema as specified in JSON Schema | 다음 JSON Schema 를 따르는 JSON 형식으로 출력하세요 | RAGAS 프롬프트 틀 |
+| Example 1 / Input / Output | 예시 1 / 입력 / 출력 | RAGAS prompt template |
+| --------EXAMPLES----------- | --------예시----------- | RAGAS prompt template |
+| Now perform the same with the following input | 이제 다음 입력에 대해 같은 작업을 수행하세요 | RAGAS prompt template |
+| Please return the output in a JSON format that complies with the following schema as specified in JSON Schema | 다음 JSON Schema 를 따르는 JSON 형식으로 출력하세요 | RAGAS prompt template |
 | Example / Example JSON / Example Text | 예시 / 예시 JSON / 예시 텍스트 | DeepEval |
 | ===== END OF EXAMPLE ====== | ===== 예시 끝 ===== | DeepEval |
 | IMPORTANT: | 중요: | DeepEval |
 | Expected JSON format: | 출력 JSON 형식: | DeepEval |
-| JSON: | JSON: | DeepEval (그대로) |
+| JSON: | JSON: | DeepEval (kept as is) |
 | Never elaborate. | 부연 설명은 절대 하지 마세요. | TruLens |
 | Respond only as a number from ... | ... 사이의 숫자로만 답하세요. | TruLens |
 | Think step by step | 단계별로 생각하세요 | TruLens |
-| The score is <score> because <reason>. | 점수가 <score>인 이유는 <reason>입니다. | DeepEval 이유 생성 |
+| The score is <score> because <reason>. | 점수가 <score>인 이유는 <reason>입니다. | DeepEval reason generation |

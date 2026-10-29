@@ -10,6 +10,6 @@
 | [데이터 형식](data-format.ko.md) | 입력 필드, CSV, 다른 프레임워크의 필드 이름, 형식 오류 |
 | [결과](results.ko.md) | 결과 JSON과 CSV, 판정 단위, 반복 실행 통계, 비용 |
 | [Python API](python-api.ko.md) | `evaluate`, `aevaluate`, 샘플, 결과, 클라이언트 |
-| [용어 대역표](glossary.md) | 영어 프롬프트 용어를 한국어로 옮긴 기준 |
+| [용어 대역표](glossary.ko.md) | 영어 프롬프트 용어를 한국어로 옮긴 기준 |
 
 처음이라면 [README](../README.ko.md#빠른-시작)부터 보세요.

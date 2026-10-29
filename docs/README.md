@@ -10,6 +10,6 @@
 | [Data format](data-format.md) | Input fields, CSV, field names from other frameworks, format errors |
 | [Results](results.md) | Result JSON and CSV, per-verdict units, repeated-run statistics, cost |
 | [Python API](python-api.md) | `evaluate`, `aevaluate`, samples, results, clients |
-| [Glossary](glossary.md) | How English prompt terms are translated into Korean (in Korean) |
+| [Glossary](glossary.md) | How English prompt terms are translated into Korean |
 
 New to Chaejeom? Start with the [README](../README.md#quickstart).
