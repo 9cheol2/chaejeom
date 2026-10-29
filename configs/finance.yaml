@@ -1,0 +1,12 @@
+# The three Chaejeom metrics with the finance domain; the other nine metrics do not use a domain.
+# Run: chaejeom run --config configs/finance.yaml --data input/finance.csv
+
+judge:
+  provider: openai
+  model: gpt-4.1-mini
+
+metrics:
+  chaejeom: all
+domain: domains/finance.yaml
+runs: 3
+concurrency: 4

@@ -1,0 +1,24 @@
+# Example Chaejeom config.
+# Run: chaejeom run --config examples/eval.yaml --data examples/samples.jsonl
+# Every key is optional. See docs/configuration.md for all options.
+
+judge:
+  provider: openai            # only openai is supported for now
+  model: gpt-4.1-mini
+# judge:
+#   provider: openai
+#   model: gpt-5-mini
+#   reasoning_effort: low     # reasoning models take an effort level instead of temperature
+
+embedding:                    # used only by metrics that need embeddings (RAGAS ResponseRelevancy)
+  provider: openai
+  model: text-embedding-3-large
+
+preset: all                   # all 12 metrics; rag-triad selects the 9 RAGAS, DeepEval and TruLens metrics
+# metrics:                    # or pick metrics per framework ("all" selects every metric of a framework)
+#   ragas: [faithfulness]
+#   chaejeom: all
+# axis: groundedness          # or every metric on one axis
+
+runs: 3                       # repeat each evaluation; 2 or more reports mean ± std
+concurrency: 4

@@ -1,0 +1,14 @@
+# All 12 metrics with the built-in prompts; used for input/basic.csv and for the "no domain" run of input/finance.csv.
+# Run: chaejeom run --config configs/basic.yaml --data input/basic.csv
+
+judge:
+  provider: openai
+  model: gpt-4.1-mini
+
+embedding:
+  provider: openai
+  model: text-embedding-3-large
+
+preset: all
+runs: 3
+concurrency: 4

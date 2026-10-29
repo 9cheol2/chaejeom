@@ -1,0 +1,35 @@
+# 원본 프레임워크 클론 (출처는 THIRD_PARTY_NOTICES.md 에 기록)
+references/
+
+# 비밀값
+.env
+.env.*
+!/.env.example
+
+# 평가 캐시
+.chaejeom_cache/
+
+# 평가 데이터와 결과: 폴더만 저장소에 둠
+input/*
+!input/.gitkeep
+!input/basic.csv
+!input/finance.csv
+output/*
+!output/.gitkeep
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+build/
+dist/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# 편집기, OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
