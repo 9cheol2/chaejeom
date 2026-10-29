@@ -2,8 +2,9 @@
 
 **[English](configuration.md) | 한국어**
 
-`chaejeom run --config`와 `chaejeom -c`는 YAML 설정 파일을 읽습니다. 모든 키는 생략할 수 있고, 모르는 키나 옵션은
-실행 전에 알려 줍니다. 대화형 터미널의 `/config save`는 지금 설정을 이 형식으로 저장합니다.
+`chaejeom run --config`와 `chaejeom -c`는 YAML 설정 파일을 읽습니다. 모든 키는 생략할 수 있지만, `chaejeom run`에는
+`metrics`, `axis`, `preset` 중 하나 이상이 있어야 합니다. 대화형 터미널은 셋 다 없으면 지표 12개 전부로 시작합니다.
+모르는 키나 옵션은 실행 전에 알려 줍니다. 대화형 터미널의 `/config save`는 지금 설정을 이 형식으로 저장합니다.
 
 ```yaml
 judge:                          # 기본: openai gpt-4.1-mini
@@ -14,7 +15,8 @@ judge:                          # 기본: openai gpt-4.1-mini
   # max_concurrency: 8          # 이 모델로 동시에 보내는 호출 수 (기본 8)
   # max_retries: 5              # 429, 5xx, 연결 오류 때 SDK 가 다시 시도하는 횟수 (기본 5)
   # max_output_tokens: 4096     # 출력 상한 (기본 4096, 추론 모델은 16000)
-  # base_url: https://...       # 그 밖의 키는 클라이언트에 그대로 넘어감
+  # max_attempts: 3             # 응답이 형식 검증을 통과하지 못할 때 시도하는 횟수 (기본 3)
+  # base_url: https://...       # OpenAI 호환 다른 주소. api_key도 쓸 수 있음
 
 embedding:                      # 기본: openai text-embedding-3-large. 임베딩이 필요한 지표를 고를 때만 쓰임
   provider: openai
@@ -32,11 +34,11 @@ metrics:                        # 프레임워크별로 고르기. "all" 이면 
 # preset: rag-triad             # RAGAS, DeepEval, TruLens 지표 9개
 # preset: all                   # 12개 전부
 
-runs: 3                         # 같은 평가를 반복할 횟수. 2 이상이면 평균 ± 표준편차 (기본 3)
-concurrency: 4                  # 동시에 평가하는 (샘플, 지표) 쌍의 수 (기본 4)
+runs: 3                         # 같은 평가를 반복할 횟수. 2 이상이면 평균과 표준편차 (기본 3)
+concurrency: 4                  # 동시에 진행하는 평가 (샘플, 지표, 회차) 수 (기본 4)
 cache: true                     # LLM 응답을 저장해 재사용 (기본 true)
 cache_dir: .chaejeom_cache
-language: en                    # 화면 언어: en 또는 ko. 판정 설명은 언제나 한국어
+language: en                    # 화면 언어: en 또는 ko (기억된 언어보다 우선). 판정 설명은 언제나 한국어
 
 domain: domains/hr.yaml         # 채점 지표에 쓸 도메인 정보 파일
 domain_model:                   # /domain, /prompt 에 쓰는 모델 (기본 openai gpt-4.1-mini)
@@ -52,8 +54,8 @@ prompts:                        # 채점 지표의 수정본 프롬프트 파일
 변수의 `OPENAI_API_KEY`에 넣습니다. 환경 변수에 이미 있는 값이 `.env`보다 우선합니다.
 
 한 모델에는 `temperature`(일반 모델)와 `reasoning_effort`(추론 모델) 중 하나만 씁니다. `max_output_tokens`는 끝없이
-이어지는 응답을 끊는 상한일 뿐이고, 정상 판정은 이보다 훨씬 짧습니다. `provider`와 `model` 외의 키는 클라이언트에
-그대로 넘어갑니다.
+이어지는 응답을 끊는 상한일 뿐이고, 정상 판정은 이보다 훨씬 짧습니다. 평가 모델과 도메인 정리 모델은
+`max_attempts`, `api_key`, `base_url`도 받고, 임베딩 모델은 `api_key`와 `base_url`만 받습니다.
 
 점수는 평가 모델이 정하므로, 같은 평가 모델로 잰 결과끼리만 비교하세요. 결과 파일에는 평가 모델과 임베딩 모델의
 설정이 기록되고, 다르면 `chaejeom compare`가 경고합니다.
@@ -62,7 +64,9 @@ prompts:                        # 채점 지표의 수정본 프롬프트 파일
 
 `metrics`, `axis`, `preset`은 함께 써도 되고, 겹치는 지표는 한 번만 실행됩니다. `metrics`에는 지표 이름만 쓰거나
 `{이름: {옵션: 값}}`으로 옵션을 함께 줍니다. 축 이름은 영어(`groundedness`, `context_relevance`,
-`answer_relevance`)로도 쓸 수 있습니다.
+`answer_relevance`)로도 쓸 수 있습니다. `metrics`는 `ragas.*` 같은 id나 패턴의 목록으로도 쓸 수 있고, `axis`도 목록으로 줄 수 있습니다.
+
+`domain`, `prompts`, `cache_dir`의 상대 경로는 설정 파일이 있는 폴더가 아니라 실행 폴더를 기준으로 찾습니다.
 
 ### 지표 옵션
 
@@ -84,7 +88,7 @@ prompts:                        # 채점 지표의 수정본 프롬프트 파일
 
 ## 반복 실행
 
-LLM 판정은 같은 입력에도 결과가 조금씩 달라질 수 있어서, 기본으로 모든 평가를 세 번 돌려 회차 간 평균 ±
+LLM 판정은 같은 입력에도 결과가 조금씩 달라질 수 있어서, 기본으로 모든 평가를 세 번 돌려 회차 간 평균과
 표준편차를 보여 줍니다. `runs: 1`이면 비용이 3분의 1이 됩니다. 명령줄의 `--runs`가 우선하고, 예전 이름 `repeats`도
 됩니다. 통계를 내는 방식은 [결과](results.ko.md#반복-실행)를 보세요.
 
@@ -95,7 +99,7 @@ LLM 판정은 같은 입력에도 결과가 조금씩 달라질 수 있어서, �
 
 | | |
 |---|---|
-| 키 | 모델, temperature, reasoning effort, 프롬프트 전체, 회차 번호. 하나라도 바뀌면 새로 호출 |
+| 키 | 모델, 주소(`base_url`), temperature, reasoning effort, 프롬프트 전체, 회차 번호. 하나라도 바뀌면 새로 호출 |
 | 반복 실행 | 회차 번호가 키에 들어가므로 회차마다 새 판정을 받음 |
 | 저장하는 것 | 형식 검증을 통과한 응답만 |
 | 끄기 | `cache: false` 또는 `chaejeom run --no-cache` |
@@ -117,10 +121,11 @@ answer_relevance: 메모리 반도체를 물으면 D램, 낸드, HBM으로 답�
 
 | 키 | 쓰는 지표 | 효과 |
 |---|---|---|
+| `name` | 없음 | 필수. 터미널에 보이는 파일 이름이며 판정은 바꾸지 않음 |
 | `service` | 세 지표 모두 | 판정 모델의 역할 문장에 들어감 |
-| `groundedness`, `context_relevance`, `answer_relevance` | 해당 지표 | [절차] 뒤에 "[이 도메인의 판정 기준]"으로 글자 그대로, 한 문장씩 줄을 나눠 들어감. [절차]와 다르면 이 기준을 따름 |
+| `groundedness`, `context_relevance`, `answer_relevance` | 해당 지표 | [절차] 뒤에 "[이 도메인의 판정 기준]"으로 문구를 바꾸지 않고 한 문장씩 줄을 나눠 들어감. [절차]와 다르면 이 기준을 따름 |
 
-빈 키는 프롬프트를 바꾸지 않고, 프롬프트의 나머지도 바뀌지 않습니다. 결과 프롬프트는 `/domain`과 `/prompt`에서 볼
+그 밖의 키는 받지 않습니다. 빈 키는 프롬프트를 바꾸지 않고, 프롬프트의 나머지도 바뀌지 않습니다. 결과 프롬프트는 `/domain`과 `/prompt`에서 볼
 수 있습니다. 항목에는 판정 기준과 정보의 종류(`수수료율`)만 적고 값(`3%`)은 적지 않으므로 평가는 레퍼런스 프리로
 유지됩니다. 정답이 될 수 있는 값이 있으면 `/domain`이 저장하지 않습니다. 도메인은 점수를 양쪽으로 움직일 수
 있습니다. 무엇을 같은 대상으로 보고 무엇을 정확히 볼지를 정할 뿐, 무엇이 사실인지는 늘 검색된 문맥만으로
@@ -152,7 +157,7 @@ TruLens 프롬프트는 고칠 수 없습니다.
 | 무엇을 | 어디로 | 언제 |
 |---|---|---|
 | 질문, 문맥, 답변 | 평가 모델 | 모든 지표 |
-| 질문과 답변, 생성한 질문 | 임베딩 모델 | RAGAS ResponseRelevancy만 |
+| 질문, 답변에서 생성한 질문 | 임베딩 모델 | RAGAS ResponseRelevancy만 |
 | 도메인 설명, 프롬프트 수정 요청 | 도메인 정리 모델 | `/domain`, `/prompt`만 |
 
 판정 응답은 `.chaejeom_cache/`에, 결과는 `output/`에 내 컴퓨터에 평문으로 저장됩니다.

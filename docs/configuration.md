@@ -2,8 +2,9 @@
 
 **English | [한국어](configuration.ko.md)**
 
-`chaejeom run --config` and `chaejeom -c` read a YAML config file. Every key is optional. Unknown keys and options are
-reported before anything runs. `/config save` in the interactive terminal writes your current settings in this format.
+`chaejeom run --config` and `chaejeom -c` read a YAML config file. Every key is optional, except that `chaejeom run` needs at
+least one of `metrics`, `axis` or `preset`; the interactive terminal starts with all 12 metrics when none is given.
+Unknown keys and options are reported before anything runs. `/config save` in the interactive terminal writes your current settings in this format.
 
 ```yaml
 judge:                          # default: openai gpt-4.1-mini
@@ -14,7 +15,8 @@ judge:                          # default: openai gpt-4.1-mini
   # max_concurrency: 8          # concurrent calls to this model (default 8)
   # max_retries: 5              # SDK retries on 429, 5xx and connection errors (default 5)
   # max_output_tokens: 4096     # output cap (default 4096, 16000 for reasoning models)
-  # base_url: https://...       # other keys are passed to the client as is
+  # max_attempts: 3             # tries when a response fails format validation (default 3)
+  # base_url: https://...       # another OpenAI-compatible endpoint; api_key is also accepted
 
 embedding:                      # default: openai text-embedding-3-large; used only when a metric needs embeddings
   provider: openai
@@ -32,11 +34,11 @@ metrics:                        # per framework; "all" selects every metric of t
 # preset: rag-triad             # the 9 RAGAS, DeepEval and TruLens metrics
 # preset: all                   # all 12
 
-runs: 3                         # repeat every evaluation; 2 or more reports mean ± std (default 3)
-concurrency: 4                  # (sample, metric) pairs evaluated at the same time (default 4)
+runs: 3                         # repeat every evaluation; 2 or more reports mean and std (default 3)
+concurrency: 4                  # evaluations (sample, metric, run) in flight at once (default 4)
 cache: true                     # store and reuse LLM responses (default true)
 cache_dir: .chaejeom_cache
-language: en                    # interface language: en or ko; judge explanations are always Korean
+language: en                    # interface language: en or ko (overrides the remembered one); judge explanations are always Korean
 
 domain: domains/hr.yaml         # domain file for the Chaejeom metrics
 domain_model:                   # model behind /domain and /prompt (default openai gpt-4.1-mini)
@@ -53,8 +55,8 @@ key in `OPENAI_API_KEY`, in a `.env` file in the working directory or in your en
 environment take precedence over `.env`.
 
 A model takes either `temperature` (non-reasoning models) or `reasoning_effort` (reasoning models), never both.
-`max_output_tokens` only cuts off runaway responses; a normal verdict is far shorter. Keys other than `provider` and
-`model` go to the client unchanged.
+`max_output_tokens` only cuts off runaway responses; a normal verdict is far shorter. The judge and domain models also
+accept `max_attempts`, `api_key` and `base_url`; the embedding model accepts only `api_key` and `base_url`.
 
 The judge decides the scores, so compare results only when they were measured with the same judge. Result files
 record the judge and embedding settings, and `chaejeom compare` warns when they differ.
@@ -63,7 +65,10 @@ record the judge and embedding settings, and `chaejeom compare` warns when they 
 
 `metrics`, `axis` and `preset` can be combined; a metric selected more than once runs once. In `metrics`, give a
 metric name alone or `{name: {option: value}}`. Axis names can also be written in Korean (`근거성`, `문맥 관련성`,
-`답변 관련성`).
+`답변 관련성`). `metrics` can also be a flat list of ids or patterns such as `ragas.*`, and `axis` can be a list.
+
+Relative paths in `domain`, `prompts` and `cache_dir` are resolved against the working directory, not the folder of
+the config file.
 
 ### Metric options
 
@@ -86,7 +91,7 @@ Defaults are those of the original framework.
 ## Runs
 
 LLM judges do not always return the same verdict for the same input, so every evaluation runs three times by default
-and results report the mean ± standard deviation across runs. `runs: 1` costs a third as much. `--runs` on the command
+and results report the mean and standard deviation across runs. `runs: 1` costs a third as much. `--runs` on the command
 line takes precedence; the older name `repeats` still works. See [Results](results.md#repeated-runs) for how the
 statistics are computed.
 
@@ -97,7 +102,7 @@ nothing for the verdicts you already have.
 
 | | |
 |---|---|
-| Key | Model, temperature, reasoning effort, the full prompt and the run number. Any change triggers a new call |
+| Key | Model, endpoint (`base_url`), temperature, reasoning effort, the full prompt and the run number. Any change triggers a new call |
 | Repeated runs | The run number is part of the key, so every run gets fresh verdicts |
 | What is stored | Only responses that pass format validation |
 | Turning it off | `cache: false`, or `chaejeom run --no-cache` |
@@ -120,10 +125,11 @@ answer_relevance: 메모리 반도체를 물으면 D램, 낸드, HBM으로 답�
 
 | Key | Used by | Effect |
 |---|---|---|
+| `name` | none | Required. A name for the file, shown in the terminal; it does not change judging |
 | `service` | all three | Goes into the judge's role line |
-| `groundedness`, `context_relevance`, `answer_relevance` | that metric | Added word for word, one sentence per line, as a "[이 도메인의 판정 기준]" block after the procedure. Where it differs from the procedure, it takes precedence |
+| `groundedness`, `context_relevance`, `answer_relevance` | that metric | Added with your wording unchanged, one sentence per line, as a "[이 도메인의 판정 기준]" block after the procedure. Where it differs from the procedure, it takes precedence |
 
-Empty keys leave the prompt as it is, and nothing else in the prompt changes; `/domain` and `/prompt` show the
+Other keys are rejected. Empty keys leave the prompt as it is, and nothing else in the prompt changes; `/domain` and `/prompt` show the
 resulting prompt. The items hold judging rules and types of information (`수수료율`), never values (`3%`), so the
 evaluation stays reference-free; `/domain` refuses to save values that could act as answers. A domain can move scores
 in either direction: it decides what counts as the same target or as exact, not what is true, which is still judged
@@ -157,7 +163,7 @@ read-only.
 | What | Sent to | When |
 |---|---|---|
 | Query, contexts, answer | The judge model | Every metric |
-| Query and answer, plus generated questions | The embedding model | RAGAS ResponseRelevancy only |
+| The query, and the questions generated from the answer | The embedding model | RAGAS ResponseRelevancy only |
 | Your domain description and prompt requests | The domain model | `/domain` and `/prompt` only |
 
 Judge responses are stored in `.chaejeom_cache/` and results in `output/`, both as plain text

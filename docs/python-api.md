@@ -20,7 +20,8 @@ result.to_json("result.json")
 result.to_csv("result.csv")
 ```
 
-Set `OPENAI_API_KEY` in your environment, or pass your own client.
+Set `OPENAI_API_KEY` in your environment, or pass your own client. The library does not read `.env` files; only the
+CLI does. Without a key, creating the default client raises `OpenAIError` before any evaluation starts.
 
 ## `evaluate` and `aevaluate`
 
@@ -39,18 +40,19 @@ await aevaluate(samples, llm=None, **options) -> EvalResult
 | `axis` | | Every metric on an axis: `"groundedness"`, `"context_relevance"`, `"answer_relevance"`, or a list |
 | `preset` | | `"rag-triad"` for the 9 upstream metrics, `"all"` for all 12 |
 | `embeddings` | text-embedding-3-large | The embedding client, created only when a selected metric needs it |
-| `concurrency` | 4 | (sample, metric) pairs evaluated at the same time |
-| `repeats` | 3 | Number of runs; results report the mean ± standard deviation across runs |
-| `cache` | `True` | `True` caches LLM responses in `.chaejeom_cache/`, a string sets another folder, `False` disables it |
+| `concurrency` | 4 | Evaluations (sample, metric, run) in flight at once |
+| `repeats` | 3 | Number of runs; results report the mean and standard deviation across runs |
+| `cache` | `True` | `True` caches LLM responses in `.chaejeom_cache/llm.sqlite`, a string sets another folder, `False` disables it. The run number is part of the cache key |
 | `on_progress` | | Called as `on_progress(done, total)` after each evaluation |
 | `label` | | A name for this run, stored in the result |
 
 `metrics`, `axis` and `preset` can be combined. Metric options are listed in
 [Configuration](configuration.md#metric-options). The Chaejeom metrics also take a domain file and a custom prompt
-file:
+file. `/prompt` in the interactive terminal creates prompt files such as `prompts/chaejeom.groundedness.yaml`; a
+path that does not exist stops the run before any call, and a prompt file takes precedence over the domain file:
 
 ```python
-evaluate(samples, metrics=[{"chaejeom.groundedness": {"domain": "domains/finance.yaml", "prompt": "prompts/chaejeom.groundedness.yaml"}}])
+evaluate(samples, metrics=[{"chaejeom.groundedness": {"domain": "domains/finance.yaml"}}])
 ```
 
 An invalid API key, missing permission or unknown model stops the run with the provider's error instead of recording
@@ -75,7 +77,7 @@ The fields and the RAGAS and DeepEval field names that are also accepted are des
 | Attribute or method | Description |
 |---|---|
 | `summary` | Per-metric scores (`mean`, `std`, per-run `runs`) |
-| `by_axis` | Axis × framework table, including `average` |
+| `by_axis` | Axis-by-framework table, including `average` |
 | `samples` | Per-sample scores and every `MetricResult` |
 | `cost` | LLM calls, tokens and estimated cost for the whole run |
 | `to_json(path)`, `to_csv(path)` | Save the result; both return the path |
@@ -93,6 +95,8 @@ embeddings = create_embeddings("openai", "text-embedding-3-small")
 result = evaluate(samples, llm=llm, embeddings=embeddings, preset="all")
 ```
 
+`create_llm` takes these options. `create_embeddings` takes only `api_key` and `base_url`.
+
 | Option | Default | Description |
 |---|---|---|
 | `temperature` | 0.0 | For non-reasoning models |
@@ -100,6 +104,7 @@ result = evaluate(samples, llm=llm, embeddings=embeddings, preset="all")
 | `max_concurrency` | 8 | Concurrent calls to this model |
 | `max_retries` | 5 | SDK retries on 429, 5xx and connection errors |
 | `max_output_tokens` | 4096, or 16000 with `reasoning_effort` | Cuts off runaway responses |
+| `max_attempts` | 3 | Tries when a response fails format validation |
 | `api_key`, `base_url` | from the environment | Passed to the OpenAI client |
 
 Only the `"openai"` provider is supported for now.

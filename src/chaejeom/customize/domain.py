@@ -5,8 +5,9 @@ for example which targets count as the same ("memory chips can be answered with 
 targets"). It never states what the right answer is, so judging stays reference-free: the items hold kinds of
 information and judging rules, never values that could serve as answers ("the fee is 3%").
 
-The service goes into each judge prompt's role line and a metric's rules are added word for word, ahead of the
-built-in procedure (see :func:`chaejeom.metrics.chaejeom.prompts.with_domain`). Nothing else in the prompt changes.
+The service goes into each judge prompt's role line and a metric's rules are added word for word, after the built-in
+procedure and before the output format (see :func:`chaejeom.metrics.chaejeom.prompts.with_domain`). Nothing else in
+the prompt changes.
 
 :func:`organize` maps a free-form description onto the items. It does not judge whether the description is
 sufficient; the profile carries exactly the detail the user provides.

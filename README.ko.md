@@ -32,11 +32,11 @@
   부분은 모두 지표 소스 파일에 적었습니다.
 - **규칙으로 매기는 채점 지표.** 판정 모델은 진술, 문맥 조각, 답변을 표시만 하고, 다섯 단계 점수는 코드가
   정합니다. 근거로 든 인용문은 검색된 문맥에 실제로 있는지 확인합니다.
-- **도메인에 맞춘 판정.** 무엇을 같은 대상으로 볼지처럼 도메인에서 판정이 어떻게 달라야 하는지 설명하면, 채점이
-  그 기준을 세 판정 프롬프트에 글자 그대로 넣습니다. 지표의 정의, 출력 형식, 점수 규칙은 그대로이고 도메인 정보가
-  정답을 알려 주지는 않습니다.
-- **반복 개선에 맞춤.** 반복 실행과 평균 ± 표준편차, 실행 전 예상 비용, 응답 캐시, 판정마다 남는 이유,
-  실행끼리 비교하는 `chaejeom compare`를 제공합니다.
+- **도메인에 맞춘 판정 (실험 기능).** 무엇을 같은 대상으로 볼지처럼 도메인에서 판정이 어떻게 달라야 하는지
+  설명하면, 채점이 그 기준을 세 판정 프롬프트에 글자 그대로 넣습니다. 지표의 정의, 출력 형식, 점수 규칙은 그대로이고
+  도메인 정보가 정답을 알려 주지는 않습니다. 현재 테스트하며 고도화하고 있는 기능입니다.
+- **반복 개선에 맞춤.** 여러 번 돌려 평균과 표준편차로 보여 주고, 실행 전 예상 비용, 응답 캐시, 판정마다 남는
+  이유, 실행끼리 비교하는 `chaejeom compare`를 제공합니다.
 
 ## 설치
 
@@ -47,6 +47,8 @@ git clone https://github.com/9cheol2/chaejeom.git
 cd chaejeom
 pip install -e .
 ```
+
+[uv](https://docs.astral.sh/uv/)를 쓴다면 `uv sync`로 설치하고 `uv run chaejeom`으로 실행합니다.
 
 ## 빠른 시작
 
@@ -86,7 +88,7 @@ chaejeom run --config examples/eval.yaml --data examples/samples.jsonl
 ```
 
 ```
-Results (mean over samples, mean ± std over 3 runs)
+결과 (샘플 평균, 3회 반복의 평균 ± 표준편차)
 
                            RAGAS      DeepEval       TruLens      Chaejeom       Average
  ───────────────────────────────────────────────────────────────────────────────────────
@@ -95,9 +97,9 @@ Results (mean over samples, mean ± std over 3 runs)
  Answer relevance    0.58 ± 0.00   0.61 ± 0.00   0.67 ± 0.00   0.64 ± 0.02   0.62 ± 0.00
 ```
 
-결과는 `output/` 폴더에 `<데이터 파일 이름>_<날짜-시각>` 이름으로 저장됩니다. `.json`에는 모든 판정과 그 이유가, `.csv`에는
-샘플당 한 행씩 점수가 들어 있습니다. 결과표의 축 이름과
-머리글은 결과 파일의 키와 맞추기 위해 화면 언어와 상관없이 영어로 나옵니다.
+결과는 `output/` 폴더에 `<데이터 파일 이름>_<날짜-시각>` 이름으로 저장됩니다. `.json`에는 모든 판정과 그 이유가,
+`.csv`에는 샘플당 한 행씩 점수가 들어 있습니다. 결과표의 축 이름과 머리글은 결과 파일의 키와 맞추기 위해 화면
+언어와 상관없이 영어로 나옵니다.
 
 ### Python
 
@@ -121,15 +123,15 @@ result.to_json("result.json")
 
 ## 지표
 
-| 축 | RAGAS | DeepEval | TruLens | 채점 |
+| 축 (보는 입력) | RAGAS | DeepEval | TruLens | 채점 |
 |---|---|---|---|---|
-| **근거성**<br>문맥 → 답변 | Faithfulness | Faithfulness | Groundedness | Groundedness |
-| **문맥 관련성**<br>질문 → 문맥 | ContextRelevance | ContextualRelevancy | Context Relevance | Context Relevance |
-| **답변 관련성**<br>질문 → 답변 | ResponseRelevancy | AnswerRelevancy | Answer Relevance | Answer Relevance |
+| **근거성**<br>문맥, 답변 | Faithfulness | Faithfulness | Groundedness | Groundedness |
+| **문맥 관련성**<br>질문, 문맥 | ContextRelevance | ContextualRelevancy | Context Relevance | Context Relevance |
+| **답변 관련성**<br>질문, 답변 | ResponseRelevancy | AnswerRelevancy | Answer Relevance | Answer Relevance |
 
 같은 축도 프레임워크마다 판정 방식이 다릅니다. RAGAS는 뒷받침되는 진술의 비율을 세고, DeepEval은 주장마다
-모순을 찾고, TruLens는 문장과 문맥 조각에 0~3점을 매깁니다. 채점 지표는 읽을 수 있는 규칙으로 다섯 단계 점수를
-매깁니다. 각 지표와 고르는 법은 [지표](docs/metrics.ko.md)를 보세요.
+모순을 찾고, TruLens는 문장과 문맥 조각에 0점에서 3점을 매깁니다. 채점 지표는 읽을 수 있는 규칙으로 다섯 단계
+점수를 매깁니다. 각 지표와 고르는 법은 [지표](docs/metrics.ko.md)를 보세요.
 
 ## 문서
 
@@ -147,6 +149,12 @@ result.to_json("result.json")
 
 채점은 개발 중이며 아직 정식 배포 전입니다. 평가 모델과 임베딩 모델은 지금 OpenAI API만 지원합니다.
 
+앞으로 할 일:
+
+- **지원 모델 확장.** Anthropic, Google, Ollama, Hugging Face의 LLM, SLM, 임베딩 모델
+- **평가 도구 확장.** 다른 레퍼런스 프리 평가 프레임워크를 같은 세 축으로 추가
+- **채점 지표 고도화.** 판정 기준 다듬기, 도메인 기준 평가 기능의 테스트와 개선
+
 ## 원본 버전
 
 | 프레임워크 | 라이선스 | 버전 | 커밋 |
@@ -157,6 +165,20 @@ result.to_json("result.json")
 
 원본 프레임워크 지표는 원본 방법론을 바탕으로 한 한국어 구현입니다. 원본과 같은 점수를 보장하지 않으며, 점수는
 평가 모델에 따라 달라집니다.
+
+## 참고 자료
+
+- Es et al. [Ragas: Automated Evaluation of Retrieval Augmented Generation](https://arxiv.org/abs/2309.15217).
+  EACL 2024 System Demonstrations.
+- Zheng et al. [Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena](https://arxiv.org/abs/2306.05685).
+  NeurIPS 2023 Datasets and Benchmarks Track.
+- Liu et al. [G-Eval: NLG Evaluation using GPT-4 with Better Human Alignment](https://arxiv.org/abs/2303.16634).
+  EMNLP 2023.
+- Lee et al. [CheckEval: A reliable LLM-as-a-Judge framework for evaluating text generation using
+  checklists](https://arxiv.org/abs/2403.18771). EMNLP 2025. 채점 지표가 이 방식을 따릅니다. 판정 모델은 확인할 수
+  있는 항목에 답하고, 점수는 정해진 규칙이 매깁니다.
+- [Kiwi (kiwipiepy)](https://github.com/bab2min/kiwipiepy). 답변을 문장으로 나누는 데 쓰는 한국어 형태소
+  분석기입니다.
 
 ## 라이선스
 

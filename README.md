@@ -32,11 +32,11 @@ into account. All you need is the query, the retrieved contexts and the answer.
   commit. Every deviation is documented in the metric's source file.
 - **Rule-based Chaejeom metrics.** The judge only marks statements, chunks and answers; code turns the marks into one
   of five levels, and quoted evidence is checked against the retrieved contexts.
-- **Domain-aware.** Describe how judging differs in your domain, such as which targets count as the same, and
-  Chaejeom adds your rules word for word to its three judge prompts. Metric definitions, output format and scoring
-  rules stay fixed, and the domain never supplies answers.
-- **Made for iteration.** Repeated runs with mean ± standard deviation, a cost estimate before every run, response
-  caching, a reason for every verdict, and `chaejeom compare` between runs.
+- **Domain-aware (experimental).** Describe how judging differs in your domain, such as which targets count as the
+  same, and Chaejeom adds your rules word for word to its three judge prompts. Metric definitions, output format and
+  scoring rules stay fixed, and the domain never supplies answers. This feature is still being tested and refined.
+- **Made for iteration.** Repeated runs reported as mean and standard deviation, a cost estimate before every run,
+  response caching, a reason for every verdict, and `chaejeom compare` between runs.
 
 ## Installation
 
@@ -47,6 +47,8 @@ git clone https://github.com/9cheol2/chaejeom.git
 cd chaejeom
 pip install -e .
 ```
+
+With [uv](https://docs.astral.sh/uv/), run `uv sync` instead and start the CLI with `uv run chaejeom`.
 
 ## Quickstart
 
@@ -96,7 +98,8 @@ Results (mean over samples, mean ± std over 3 runs)
 ```
 
 Results are saved in `output/` as `<data file name>_<date-time>`: the `.json` file keeps every verdict with its reason,
-and the `.csv` file has one row per sample for spreadsheets.
+and the `.csv` file has one row per sample for spreadsheets. Axis names and headers in the result table are always in
+English so that they match the keys in the result file.
 
 ### Python
 
@@ -120,15 +123,15 @@ See the [Python API](docs/python-api.md) for every option.
 
 ## Metrics
 
-| Axis | RAGAS | DeepEval | TruLens | Chaejeom |
+| Axis (inputs) | RAGAS | DeepEval | TruLens | Chaejeom |
 |---|---|---|---|---|
-| **Groundedness**<br>context → answer | Faithfulness | Faithfulness | Groundedness | Groundedness |
-| **Context relevance**<br>query → context | ContextRelevance | ContextualRelevancy | Context Relevance | Context Relevance |
-| **Answer relevance**<br>query → answer | ResponseRelevancy | AnswerRelevancy | Answer Relevance | Answer Relevance |
+| **Groundedness**<br>context, answer | Faithfulness | Faithfulness | Groundedness | Groundedness |
+| **Context relevance**<br>query, context | ContextRelevance | ContextualRelevancy | Context Relevance | Context Relevance |
+| **Answer relevance**<br>query, answer | ResponseRelevancy | AnswerRelevancy | Answer Relevance | Answer Relevance |
 
 The frameworks judge each axis differently: RAGAS counts supported statements, DeepEval looks for contradictions
-claim by claim, and TruLens grades sentences and chunks on a 0–3 scale. The Chaejeom metrics score on five levels
-from rules you can read. [Metrics](docs/metrics.md) explains each one and how to choose.
+claim by claim, and TruLens grades sentences and chunks on a scale of 0 to 3. The Chaejeom metrics score on five
+levels from rules you can read. [Metrics](docs/metrics.md) explains each one and how to choose.
 
 ## Documentation
 
@@ -147,6 +150,13 @@ from rules you can read. [Metrics](docs/metrics.md) explains each one and how to
 Chaejeom is under active development and has not been released yet. The judge and embedding models currently run on
 the OpenAI API only.
 
+Planned work:
+
+- **More model providers.** LLMs, small language models and embedding models from Anthropic, Google, Ollama and
+  Hugging Face.
+- **More frameworks.** Other reference-free evaluation frameworks, reported on the same three axes.
+- **Better Chaejeom metrics.** Refined judging rules, and further testing of domain-aware judging.
+
 ## Upstream versions
 
 | Framework | License | Version | Commit |
@@ -157,6 +167,20 @@ the OpenAI API only.
 
 Each upstream metric is a Korean implementation of the original method. Scores are not guaranteed to match the
 originals and depend on the judge model.
+
+## References
+
+- Es et al. [Ragas: Automated Evaluation of Retrieval Augmented Generation](https://arxiv.org/abs/2309.15217).
+  EACL 2024 System Demonstrations.
+- Zheng et al. [Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena](https://arxiv.org/abs/2306.05685).
+  NeurIPS 2023 Datasets and Benchmarks Track.
+- Liu et al. [G-Eval: NLG Evaluation using GPT-4 with Better Human Alignment](https://arxiv.org/abs/2303.16634).
+  EMNLP 2023.
+- Lee et al. [CheckEval: A reliable LLM-as-a-Judge framework for evaluating text generation using
+  checklists](https://arxiv.org/abs/2403.18771). EMNLP 2025. The Chaejeom metrics follow its approach: the judge
+  answers checkable items, and fixed rules turn the answers into a score.
+- [Kiwi (kiwipiepy)](https://github.com/bab2min/kiwipiepy), the Korean morphological analyzer used to split answers
+  into sentences.
 
 ## License
 

@@ -4,7 +4,8 @@
 
 대화형 터미널과 `chaejeom run` 모두 JSON 파일과 CSV 파일을 `output/` 폴더에 저장합니다. 이름은 데이터 파일 이름과
 실행 시각으로 정해지며, 예를 들어 `output/sample_20261028-153012.json`입니다. `chaejeom run --out FILE`로 다른 이름을
-줄 수 있습니다. Python의 `evaluate()`는 같은 구조의 `EvalResult`를 돌려줍니다. 형식은
+줄 수 있습니다. 모든 지표가 실패해 점수가 하나도 없으면 파일을 저장하지 않고, `chaejeom run`은 종료 코드 1로
+끝납니다. Python의 `evaluate()`는 같은 구조의 `EvalResult`를 돌려줍니다. 형식은
 `schema_version: 1`입니다.
 
 ## CSV
@@ -34,11 +35,11 @@
   "embedding": null,
   "metrics": {"ragas.faithfulness": {}, "deepeval.faithfulness": {"include_reason": true, "penalize_ambiguous_claims": false, "truths_extraction_limit": null}},
   "dataset": "3f2a9c1e7b04",
-  "fingerprints": {"chaejeom.groundedness": {"domain": "a1b2c3d4e5f6", "prompt": "0f9e8d7c6b5a", "requests": ["..."]}},
+  "fingerprints": {"chaejeom.groundedness": {"domain": "a1b2c3d4e5f6"}, "chaejeom.answer_relevance": {"prompt": "0f9e8d7c6b5a", "requests": ["..."]}},
   "repeats": 3,
   "summary": [
     {"metric_id": "deepeval.contextual_relevancy", "axis": "context_relevance",
-     "mean": 0.69, "std": 0.05, "runs": [0.75, 0.67, 0.67], "scored": 6, "errors": 0, "dropped": 0}
+     "mean": 0.70, "std": 0.05, "runs": [0.75, 0.67, 0.67], "scored": 6, "errors": 0, "dropped": 0}
   ],
   "by_axis": {
     "groundedness": {
@@ -67,10 +68,10 @@
 | `judge`, `embedding` | 채점에 쓴 모델과 설정. 점수는 평가 모델에 따라 달라지므로 결과를 비교할 때 확인 |
 | `metrics` | 실행한 지표와 실제로 쓴 옵션(기본값 포함) |
 | `dataset` | 샘플의 짧은 해시. 같으면 같은 데이터로 잰 결과 |
-| `fingerprints` | 채점 지표가 실제로 쓴 도메인 정보 파일과 수정본 프롬프트의 해시, 프롬프트 수정 요청 |
+| `fingerprints` | 채점 지표가 쓴 도메인 정보 파일의 해시. 수정본 프롬프트가 도메인을 대신했으면 그 프롬프트의 해시와 수정 요청 |
 | `repeats` | 반복 횟수 |
 | `summary` | 지표별 `mean`, `std`, 회차별 `runs`, 점수가 난 결과 수 `scored`, 오류 수 `errors`, 어느 회차엔가 점수가 없어 회차 통계에서 뺀 샘플 수 `dropped` |
-| `by_axis` | 축 × 프레임워크 점수표. `average`는 그 축의 RAGAS, DeepEval, TruLens 지표 평균 |
+| `by_axis` | 축별, 프레임워크별 점수표. `average`는 그 축의 RAGAS, DeepEval, TruLens 지표 평균 |
 | `cost` | 실행 전체의 합계. 필드는 지표 결과의 `cost`와 같음 |
 | `samples` | 샘플별 결과. 입력의 `id`와 `metadata`, 지표별 회차 점수 `scores`, 모든 `MetricResult` |
 
@@ -89,7 +90,7 @@
     {"type": "statement", "text": "...", "verdict": 0, "score": null, "reason": "...", "context_ids": []}
   ],
   "reason": "진술 3개 중 2개가 문맥에서 직접 추론됩니다.",
-  "cost": {"llm_calls": 2, "tokens": 1840, "cache_hits": 0, "input_tokens": 1620, "output_tokens": 220, "usd": 0.000375},
+  "cost": {"llm_calls": 2, "tokens": 1840, "cache_hits": 0, "input_tokens": 1620, "output_tokens": 220, "usd": 0.001},
   "error": null
 }
 ```
@@ -98,11 +99,11 @@
 |---|---|
 | `source` | 지표를 옮겨 온 원본 프레임워크, 버전, 커밋과 방식 설명 |
 | `run` | 몇 번째 회차의 결과인지 (1부터) |
-| `score` | 0~1, 높을수록 좋음. 계산할 수 없으면 `null`이며, 0과 다르고 평균에서 빠짐 |
+| `score` | 0에서 1, 높을수록 좋음(`ragas.response_relevancy`는 드물게 0보다 작을 수 있음). 계산할 수 없으면 `null`이며, 0과 다르고 평균에서 빠짐 |
 | `raw_score`, `raw_scale` | 원본 프레임워크 척도의 점수와 그 척도 설명 |
 | `units` | 판정 단위별 결과. 아래 표 참고 |
 | `reason` | 점수 설명 (한국어) |
-| `cost` | 이 샘플에서 이 지표가 쓴 LLM 호출 수와 토큰, 캐시에서 재사용한 응답 수, `src/chaejeom/pricing.py`의 단가로 계산한 예상 비용(USD). 캐시 응답은 비용 없음. 임베딩 호출은 세지 않음 |
+| `cost` | 이 샘플에서 이 지표가 쓴 LLM 호출 수와 토큰, 캐시에서 재사용한 응답 수, `src/chaejeom/pricing.py`의 단가로 계산한 예상 비용(USD). 캐시 응답은 비용 없음. 임베딩 호출은 세지 않음. 단가표에 없는 모델은 0 |
 | `error` | 필수 입력이 없거나 응답을 읽을 수 없는 등 실패한 이유. 실패 전까지 쓴 호출은 `cost`에 남음 |
 
 ### 지표별 판정 단위
@@ -115,12 +116,12 @@
 | `deepeval.faithfulness` | truth (문맥에서), claim (답변에서) | claim만: yes / no / borderline | | no와 borderline일 때 | |
 | `deepeval.contextual_relevancy` | statement (문맥에서) | yes / no | | no일 때 | 그 문맥 |
 | `deepeval.answer_relevancy` | statement (답변에서) | yes / no / borderline | | no와 borderline일 때 | |
-| `trulens.groundedness` | sentence (답변에서) | | 0~3 | 근거 | |
-| `trulens.context_relevance` | chunk | | 0~3 | 기준과 근거 | 그 문맥 |
+| `trulens.groundedness` | sentence (답변에서) | | 0에서 3 | 근거 | |
+| `trulens.context_relevance` | chunk | | 0에서 3 | 근거 | 그 문맥 |
 | `trulens.answer_relevance` | 없음 | | | | |
 | `chaejeom.groundedness` | statement. `core` 포함 | supported / unsupported / contradicted | | 이유와 인용한 문맥 문장 | 인용한 문맥 |
 | `chaejeom.context_relevance` | chunk | relevant / partial / irrelevant | | 이유 | 그 문맥 |
-| `chaejeom.answer_relevance` | judge (답변이 응한 방식), statement (관계없는 부분) | direct / indirect / other_aspect / off_topic / evasive / declined | | 이유 | |
+| `chaejeom.answer_relevance` | judge (답변이 응한 방식), statement (관계없는 부분) | judge: direct / indirect / other_aspect / off_topic / evasive / declined. statement: irrelevant | | 이유 (judge만) | |
 
 판정 값은 원본 프레임워크의 값을 그대로 둡니다.
 
@@ -139,6 +140,6 @@
 
 ## 예상 비용
 
-실행 전에 보여 주는 예상 비용은 예제 데이터에서 잰 토큰 수를 바탕으로, 내 샘플의 길이와 (조각이나 답변 문장마다
-판정하는 지표는) 그 개수에 맞춰 늘린 대략적인 값입니다. 캐시를 쓰지 않는다고 보고 계산합니다. 실제 비용은
+실행 전에 보여 주는 예상 비용은 평가 모델의 단가를 알 때만 나옵니다. 예제 데이터에서 잰 토큰 수를 바탕으로, 내
+샘플의 길이와 (호출이나 출력이 조각, 답변 문장 수에 따라 늘어나는 지표는) 그 개수에 맞춰 늘린 대략적인 값입니다. 캐시를 쓰지 않는다고 보고 계산합니다. 실제 비용은
 `--limit`이나 `/run n`으로 몇 개만 먼저 돌려 확인하세요.

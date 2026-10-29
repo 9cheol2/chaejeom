@@ -20,7 +20,8 @@ result.to_json("result.json")
 result.to_csv("result.csv")
 ```
 
-환경 변수에 `OPENAI_API_KEY`를 설정하거나, 직접 만든 클라이언트를 넘깁니다.
+환경 변수에 `OPENAI_API_KEY`를 설정하거나, 직접 만든 클라이언트를 넘깁니다. 라이브러리는 `.env` 파일을 읽지 않고,
+읽는 것은 CLI뿐입니다. 키가 없으면 기본 클라이언트를 만들 때 평가를 시작하기도 전에 `OpenAIError`가 납니다.
 
 ## `evaluate`와 `aevaluate`
 
@@ -39,17 +40,19 @@ await aevaluate(samples, llm=None, **options) -> EvalResult
 | `axis` | | 축의 지표 전부: `"groundedness"`, `"context_relevance"`, `"answer_relevance"` 또는 그 목록 |
 | `preset` | | `"rag-triad"`는 원본 지표 9개, `"all"`은 12개 전부 |
 | `embeddings` | text-embedding-3-large | 임베딩 클라이언트. 고른 지표에 필요할 때만 만듦 |
-| `concurrency` | 4 | 동시에 평가하는 (샘플, 지표) 쌍의 수 |
-| `repeats` | 3 | 반복 횟수. 회차 간 평균 ± 표준편차를 냄 |
-| `cache` | `True` | `True`면 `.chaejeom_cache/`에 LLM 응답을 캐시, 문자열이면 그 폴더, `False`면 끔 |
+| `concurrency` | 4 | 동시에 진행하는 평가 (샘플, 지표, 회차) 수 |
+| `repeats` | 3 | 반복 횟수. 회차 간 평균과 표준편차를 냄 |
+| `cache` | `True` | `True`면 `.chaejeom_cache/llm.sqlite`에 LLM 응답을 캐시, 문자열이면 그 폴더, `False`면 끔. 회차 번호가 캐시 키에 들어감 |
 | `on_progress` | | 평가가 하나 끝날 때마다 `on_progress(done, total)`로 호출 |
 | `label` | | 이 실행의 이름. 결과에 저장됨 |
 
 `metrics`, `axis`, `preset`은 함께 써도 됩니다. 지표 옵션은 [설정](configuration.ko.md#지표-옵션)을 보세요. 채점
-지표는 도메인 정보 파일과 수정본 프롬프트 파일도 받습니다.
+지표는 도메인 정보 파일과 수정본 프롬프트 파일도 받습니다. `prompts/chaejeom.groundedness.yaml` 같은 프롬프트
+파일은 대화형 터미널의 `/prompt`가 만듭니다. 없는 경로를 주면 호출 전에 멈추고, 프롬프트 파일이 도메인 정보
+파일보다 우선합니다.
 
 ```python
-evaluate(samples, metrics=[{"chaejeom.groundedness": {"domain": "domains/finance.yaml", "prompt": "prompts/chaejeom.groundedness.yaml"}}])
+evaluate(samples, metrics=[{"chaejeom.groundedness": {"domain": "domains/finance.yaml"}}])
 ```
 
 API 키가 틀렸거나, 권한이 없거나, 모델이 없으면 모든 샘플에 같은 실패를 남기지 않고 제공자의 오류로 실행을
@@ -74,7 +77,7 @@ EvalSample(id="hr-02", query="...", contexts=[Context(id="doc-12", text="...", r
 | 속성이나 메서드 | 설명 |
 |---|---|
 | `summary` | 지표별 점수 (`mean`, `std`, 회차별 `runs`) |
-| `by_axis` | `average`를 포함한 축 × 프레임워크 점수표 |
+| `by_axis` | `average`를 포함한 축별, 프레임워크별 점수표 |
 | `samples` | 샘플별 점수와 모든 `MetricResult` |
 | `cost` | 실행 전체의 LLM 호출, 토큰, 예상 비용 |
 | `to_json(path)`, `to_csv(path)` | 결과 저장. 둘 다 경로를 돌려줌 |
@@ -92,6 +95,8 @@ embeddings = create_embeddings("openai", "text-embedding-3-small")
 result = evaluate(samples, llm=llm, embeddings=embeddings, preset="all")
 ```
 
+`create_llm`은 아래 옵션을 받습니다. `create_embeddings`는 `api_key`와 `base_url`만 받습니다.
+
 | 옵션 | 기본값 | 설명 |
 |---|---|---|
 | `temperature` | 0.0 | 일반 모델용 |
@@ -99,6 +104,7 @@ result = evaluate(samples, llm=llm, embeddings=embeddings, preset="all")
 | `max_concurrency` | 8 | 이 모델로 동시에 보내는 호출 수 |
 | `max_retries` | 5 | 429, 5xx, 연결 오류 때 SDK가 다시 시도하는 횟수 |
 | `max_output_tokens` | 4096, `reasoning_effort`가 있으면 16000 | 끝없이 이어지는 응답을 끊음 |
+| `max_attempts` | 3 | 응답이 형식 검증을 통과하지 못할 때 시도하는 횟수 |
 | `api_key`, `base_url` | 환경 변수에서 | OpenAI 클라이언트에 그대로 넘어감 |
 
 지금은 `"openai"` 제공자만 지원합니다.

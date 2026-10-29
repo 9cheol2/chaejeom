@@ -17,7 +17,7 @@ UTF-8. CSV files saved by Korean Excel (CP949) are read too.
 | `query` | string | The user question |
 | `contexts` | list of strings, or of `{id, text, rank}` | Retrieved documents, in rank order. `id` and `rank` are optional and default to `c1, c2, ...` and `1, 2, ...` |
 | `answer` | string | The answer to evaluate |
-| `id` | string or number | Optional. Identifies the sample in results and in `chaejeom compare`; defaults to its position |
+| `id` | string or integer | Optional. Identifies the sample in results and in `chaejeom compare`; defaults to its position, counting from 0 |
 | `metadata` | object | Optional. Copied to the results as is |
 
 Every field is optional. When a sample lacks a field a metric needs, only that metric records an error for that
@@ -62,7 +62,7 @@ Two kinds of extra fields are accepted with a notice instead of an error:
 ## CSV
 
 A header row, then one sample per row. Put each retrieved document in its own `context_1`, `context_2`, ... column;
-empty cells are skipped. A `contexts` column holding a JSON list (`["...", "..."]`) also works, and any other value in
+empty cells are skipped. A `contexts` column (or `retrieved_contexts` or `retrieval_context`) holding a JSON list (`["...", "..."]`) also works, and any other value in
 it is read as a single context, so a document such as `[공지] ...` is safe. Columns named `metadata.<key>` (or
 `meta.<key>`, as in the result CSV) go into `metadata`.
 
@@ -81,6 +81,7 @@ Loading stops with a message that names the problem and shows the expected forma
 | Problem | Example |
 |---|---|
 | The extension is not `.jsonl`, `.json` or `.csv` | `samples.txt` |
+| The file holds no samples | An empty file, or a CSV with only a header row |
 | The file is not UTF-8 (or, for CSV, CP949) | A JSONL file saved as CP949 |
 | A line is not valid JSON | A line cut in the middle |
 | A CSV row has more cells than the header | An unquoted comma inside a cell |

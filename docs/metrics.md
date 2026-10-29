@@ -5,31 +5,35 @@
 Chaejeom measures a RAG system on three axes. Every metric is reference-free: it needs only the query, the retrieved
 contexts and the answer, never a ground-truth answer.
 
-| Axis | Question it answers |
+| Axis (inputs) | Question it answers |
 |---|---|
-| Groundedness (context → answer) | Is what the answer says supported by the retrieved contexts? |
-| Context relevance (query → context) | Did retrieval bring back what the question needs? |
-| Answer relevance (query → answer) | Does the answer address the question? |
+| Groundedness (context, answer) | Is what the answer says supported by the retrieved contexts? |
+| Context relevance (query, context) | Did retrieval bring back what the question needs? |
+| Answer relevance (query, answer) | Does the answer address the question? |
 
 ## Overview
 
 | Axis | Metric id | Method | Scale |
 |---|---|---|---|
-| Groundedness | [`ragas.faithfulness`](https://github.com/vibrantlabsai/ragas/tree/4ecab384fda829ca50bec3f07cc49589d756e172/src/ragas/metrics/collections/faithfulness) | Splits the answer into statements and counts those that can be inferred from the contexts | 0–1 |
-| | [`deepeval.faithfulness`](https://github.com/confident-ai/deepeval/tree/29dcf5f24397715a60348c1e41e7d416a3b2d6c8/deepeval/metrics/faithfulness) | Extracts truths from the contexts and claims from the answer, and penalizes claims that contradict them | 0–1 |
-| | [`trulens.groundedness`](https://github.com/truera/trulens/blob/1f65a310cd5bdaef3ea7be76e98022f574cea39c/src/feedback/trulens/feedback/llm_provider.py#L3347) | Grades each answer sentence against the contexts | 0–3, normalized |
+| Groundedness | [`ragas.faithfulness`](https://github.com/vibrantlabsai/ragas/tree/4ecab384fda829ca50bec3f07cc49589d756e172/src/ragas/metrics/collections/faithfulness) | Splits the answer into statements and counts those that can be inferred from the contexts | 0 to 1 |
+| | [`deepeval.faithfulness`](https://github.com/confident-ai/deepeval/tree/29dcf5f24397715a60348c1e41e7d416a3b2d6c8/deepeval/metrics/faithfulness) | Extracts truths from the contexts and claims from the answer, and penalizes claims that contradict them | 0 to 1 |
+| | [`trulens.groundedness`](https://github.com/truera/trulens/blob/1f65a310cd5bdaef3ea7be76e98022f574cea39c/src/feedback/trulens/feedback/llm_provider.py#L3347) | Grades each answer sentence against the contexts | 0 to 3, normalized |
 | | [`chaejeom.groundedness`](../src/chaejeom/metrics/chaejeom/groundedness.py) | Marks each statement and whether it is core to the question; rules set the level | 5 levels |
-| Context relevance | [`ragas.context_relevance`](https://github.com/vibrantlabsai/ragas/tree/4ecab384fda829ca50bec3f07cc49589d756e172/src/ragas/metrics/collections/context_relevance) | Two judge prompts rate the contexts as a whole | 0–2, normalized |
-| | [`deepeval.contextual_relevancy`](https://github.com/confident-ai/deepeval/tree/29dcf5f24397715a60348c1e41e7d416a3b2d6c8/deepeval/metrics/contextual_relevancy) | Extracts statements from each context and counts the relevant ones | 0–1 |
-| | [`trulens.context_relevance`](https://github.com/truera/trulens/blob/1f65a310cd5bdaef3ea7be76e98022f574cea39c/src/feedback/trulens/feedback/llm_provider.py#L727) | Grades each chunk | 0–3, normalized |
+| Context relevance | [`ragas.context_relevance`](https://github.com/vibrantlabsai/ragas/tree/4ecab384fda829ca50bec3f07cc49589d756e172/src/ragas/metrics/collections/context_relevance) | Two judge prompts rate the contexts as a whole | 0 to 2, normalized |
+| | [`deepeval.contextual_relevancy`](https://github.com/confident-ai/deepeval/tree/29dcf5f24397715a60348c1e41e7d416a3b2d6c8/deepeval/metrics/contextual_relevancy) | Extracts statements from each context and counts the relevant ones | 0 to 1 |
+| | [`trulens.context_relevance`](https://github.com/truera/trulens/blob/1f65a310cd5bdaef3ea7be76e98022f574cea39c/src/feedback/trulens/feedback/llm_provider.py#L727) | Grades each chunk | 0 to 3, normalized |
 | | [`chaejeom.context_relevance`](../src/chaejeom/metrics/chaejeom/context_relevance.py) | Marks each chunk as holding the answer, on topic, or irrelevant; rules set the level | 5 levels |
-| Answer relevance | [`ragas.response_relevancy`](https://github.com/vibrantlabsai/ragas/tree/4ecab384fda829ca50bec3f07cc49589d756e172/src/ragas/metrics/collections/answer_relevancy) | Generates questions from the answer and compares them with the query by embedding similarity | −1–1 |
-| | [`deepeval.answer_relevancy`](https://github.com/confident-ai/deepeval/tree/29dcf5f24397715a60348c1e41e7d416a3b2d6c8/deepeval/metrics/answer_relevancy) | Splits the answer into statements and counts the relevant ones | 0–1 |
-| | [`trulens.answer_relevance`](https://github.com/truera/trulens/blob/1f65a310cd5bdaef3ea7be76e98022f574cea39c/src/feedback/trulens/feedback/llm_provider.py#L1121) | Grades the whole answer | 0–3, normalized |
+| Answer relevance | [`ragas.response_relevancy`](https://github.com/vibrantlabsai/ragas/tree/4ecab384fda829ca50bec3f07cc49589d756e172/src/ragas/metrics/collections/answer_relevancy) | Generates questions from the answer and compares them with the query by embedding similarity | -1 to 1 |
+| | [`deepeval.answer_relevancy`](https://github.com/confident-ai/deepeval/tree/29dcf5f24397715a60348c1e41e7d416a3b2d6c8/deepeval/metrics/answer_relevancy) | Splits the answer into statements and counts the relevant ones | 0 to 1 |
+| | [`trulens.answer_relevance`](https://github.com/truera/trulens/blob/1f65a310cd5bdaef3ea7be76e98022f574cea39c/src/feedback/trulens/feedback/llm_provider.py#L1121) | Grades the whole answer | 0 to 3, normalized |
 | | [`chaejeom.answer_relevance`](../src/chaejeom/metrics/chaejeom/answer_relevance.py) | Marks how the answer responds; rules set the level | 5 levels |
 
-Every score in the results is on 0–1, higher is better; the original scale is kept as `raw_score`. Run
-`chaejeom list` to see the metrics and the inputs each one needs.
+Every score in the results is between 0 and 1, and higher is better. The one exception is
+`ragas.response_relevancy`, which keeps the cosine similarity as is, so it can rarely fall below 0. The upstream
+metrics keep the score on their original scale as `raw_score`; the Chaejeom metrics leave it empty.
+
+Only `ragas.response_relevancy` needs an embedding model. Run `chaejeom list` to see the metrics and the inputs each
+one needs. A metric whose required input is empty records an error instead of a score.
 
 ## Built for Korean
 
@@ -41,7 +45,7 @@ evaluation for Korean:
 | The judge reads English few-shot examples while judging Korean text | Few-shot examples are rewritten as Korean sentences, keeping the original number of examples and mix of verdicts |
 | TruLens splits Korean answers with an English sentence tokenizer (nltk) | Sentences are split with a Korean morphological analyzer (kiwipiepy) |
 | Explanations come back in mixed styles | Explanations use a consistent polite style; extracted statements use a plain declarative style |
-| The same concept is translated differently by each framework | A shared [glossary](glossary.md) keeps terms consistent across the three frameworks |
+| The same concept is translated differently by each framework | A shared [glossary](glossary.md) (in Korean) keeps terms consistent across the three frameworks |
 
 ## Upstream metrics
 
@@ -50,6 +54,11 @@ The RAGAS, DeepEval and TruLens metrics follow the upstream code at the commits 
 cases. Every change is recorded in the metric's source file and in
 [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md). Their prompts are read-only in Chaejeom, so scores stay
 comparable with what the original frameworks measure.
+
+Two behaviors are worth knowing. As upstream does by default, DeepEval Faithfulness and AnswerRelevancy count
+`borderline` verdicts as passing. And unlike the originals, when a response does not match the required JSON format,
+Chaejeom's client asks again, up to three attempts in total; `ragas.context_relevance` turns this off and keeps only
+its own upstream retry loop.
 
 ## Chaejeom metrics
 
@@ -67,14 +76,17 @@ Their judge prompts combine what works in the upstream prompts:
 
 | Metric | The judge marks | Levels |
 |---|---|---|
-| Groundedness | Each statement in the answer: supported, not in the context, or contradicted; and whether it is core to the question | 1.0 every statement supported<br>0.75 only non-core statements missing from the context<br>0.5 a core statement missing from the context<br>0.25 a statement contradicts the context<br>0 no supported core statement |
+| Groundedness | Each statement in the answer: supported, not in the context, or contradicted; and whether it is core to the question | 1.0 every statement supported<br>0 no core statement supported<br>0.25 a core statement supported, but a statement contradicts the context<br>0.5 a core statement supported, but another core statement is missing from the context<br>0.75 every core statement supported; only non-core statements missing |
 | Context relevance | Each chunk: whether it is about what the question asks, and whether it holds the answer | 1.0 a chunk holds the answer and no chunk is irrelevant<br>0.75 a chunk holds the answer; under half are irrelevant<br>0.5 a chunk holds the answer; half or more are irrelevant<br>0.25 no chunk holds the answer, but some are on topic<br>0 nothing relevant |
-| Answer relevance | Whether the answer evades, says the information is not in the materials, addresses the same target, and answers directly | 1.0 answers directly<br>0.75 answers directly but adds unrelated content<br>0.5 gives only general conditions<br>0.25 answers a different aspect<br>0 off topic or evasive<br>no score: says the information is not in the materials |
+| Answer relevance | Whether the answer evades, says the information is not in the materials, addresses the same target, and answers directly | 1.0 answers directly<br>0.75 answers directly but adds unrelated content<br>0.5 gives only general explanations or conditions<br>0.25 answers a different aspect<br>0 off topic or evasive<br>no score: says the information is not in the materials |
+
+Groundedness applies its rules from the top, and the first one that matches sets the level. If the judge marks no
+statement as core, every statement counts as core.
 
 ### Safeguards
 
 - **Quotes are verified.** Evidence the judge quotes must appear in the retrieved contexts, ignoring spacing,
-  full-width characters and quote marks. Because judges often change a connective ending or skip the middle of a long
+  full-width characters and quote marks, and must be at least five characters long after that. Because judges often change a connective ending or skip the middle of a long
   sentence when quoting Korean, a quote also counts when at most two in-order pieces of one chunk cover 90% of it,
   provided every number in the quote appears in that chunk. Otherwise the statement counts as not in the context and
   the reason says so. When a supported statement's numbers do not appear in the quoted chunk, the verdict stands but is flagged
@@ -90,6 +102,8 @@ Their judge prompts combine what works in the upstream prompts:
   outdated chunk is a context relevance problem, not a groundedness problem.
 - **Contact details are checked.** "Please call 1588-0000" is checked against the contexts; a plain "please contact
   the help desk" is not judged.
+- **Nothing is skipped.** If the judge leaves out a statement or chunk number, Chaejeom asks once more and records
+  an error if it is still missing.
 - **No misleading scores.** An answer with no factual statement, such as "I don't know" or only a referral, gets no
   groundedness score. Its evasion is penalized by answer relevance instead.
 
@@ -97,20 +111,25 @@ Their judge prompts combine what works in the upstream prompts:
 
 The right judgment can depend on the domain. In a stock information service, an answer about HBM addresses a
 question about memory chips, while an answer about HBM to a question about NAND does not. A domain file states such
-rules per metric, in your words, and Chaejeom adds them word for word to that metric's judge prompt.
+rules per metric, in your words, and Chaejeom adds them to that metric's judge prompt with your wording unchanged,
+one sentence per line.
 
 The service goes into the judge's role line, and the rules go into a "[이 도메인의 판정 기준]" block after the
 procedure, which takes precedence where the two differ. Nothing else in the prompt changes, so the marks and the
 five-level rules mean the same with or without a domain. Code inserts the text rather than an LLM rewriting the
 prompt: in trials, a rewrite invented rules the user never gave and dropped unrelated built-in ones.
 
-Domain rules decide what counts as the same target or as exact, never what is true: the items hold no values that
-could act as answers, and facts are still judged from the retrieved contexts alone. Scores can therefore move in
+Domain rules decide what counts as the same target or as exact, never what is true. `/domain` asks the model to
+leave out values that could act as answers and does not save the file while any remain, and facts are still
+judged from the retrieved contexts alone. Scores can therefore move in
 either direction, toward what is right for the domain.
 
 Create a domain file with `/domain` in the interactive terminal; see
 [Configuration](configuration.md#domain-file). The Chaejeom prompts can also be revised in your own words with
-`/prompt`; see [Configuration](configuration.md#prompt-file).
+`/prompt`; see [Configuration](configuration.md#prompt-file). When a metric uses a revised prompt, the domain file is
+not applied to that metric.
+
+Domain-aware judging is experimental and still being tested.
 
 ## Choosing metrics
 
@@ -142,14 +161,20 @@ Open the sample with `/show` in the interactive terminal to see the verdicts beh
 
 ### Edge cases
 
-| Situation | Result (as in the original framework) |
+| Situation | Result |
 |---|---|
 | RAGAS Faithfulness finds no statements | No score (`null`) |
 | DeepEval Faithfulness or AnswerRelevancy finds no claims or statements | 1 |
 | DeepEval ContextualRelevancy finds no statements | 0 |
 | TruLens Groundedness has no sentences left after dropping trivial ones | 0 |
 | RAGAS ResponseRelevancy | Uses cosine similarity as is, so it can occasionally be below 0 |
+| RAGAS ResponseRelevancy: every generated question is noncommittal, or none could be generated | 0 |
+| RAGAS ContextRelevance: one of the two judge prompts fails | The other prompt's rating alone; `null` if both fail |
+| TruLens: the score cannot be read from the response | No score, with an error (upstream returns -1) |
+| DeepEval: every verdict is outside the allowed vocabulary | No score, with an error |
 | Chaejeom Groundedness finds no factual statement | No score; the evasion is penalized by answer relevance |
 | Chaejeom Answer relevance on an answer that says the information is not in the materials | No score, verdict `declined`; groundedness checks the claim |
 
-A missing score (`null`) is different from 0 and is left out of means.
+The RAGAS rows and the first DeepEval and TruLens rows match the original frameworks. In the two error rows, the
+originals return a fallback value instead of an error. A missing score (`null`) is different from 0 and is left out
+of means.

@@ -4,8 +4,8 @@
 
 Both the interactive terminal and `chaejeom run` save a JSON file and a CSV file in `output/`, named after the data
 file and the time of the run, such as `output/sample_20261028-153012.json`. `chaejeom run --out FILE` sets another
-name. In Python, `evaluate()` returns an `EvalResult` with the same
-structure. The format is `schema_version: 1`.
+name. If every metric failed and nothing was scored, no file is saved and `chaejeom run` exits with code 1. In
+Python, `evaluate()` returns an `EvalResult` with the same structure. The format is `schema_version: 1`.
 
 ## CSV
 
@@ -34,11 +34,11 @@ Per-verdict details are only in the JSON file.
   "embedding": null,
   "metrics": {"ragas.faithfulness": {}, "deepeval.faithfulness": {"include_reason": true, "penalize_ambiguous_claims": false, "truths_extraction_limit": null}},
   "dataset": "3f2a9c1e7b04",
-  "fingerprints": {"chaejeom.groundedness": {"domain": "a1b2c3d4e5f6", "prompt": "0f9e8d7c6b5a", "requests": ["..."]}},
+  "fingerprints": {"chaejeom.groundedness": {"domain": "a1b2c3d4e5f6"}, "chaejeom.answer_relevance": {"prompt": "0f9e8d7c6b5a", "requests": ["..."]}},
   "repeats": 3,
   "summary": [
     {"metric_id": "deepeval.contextual_relevancy", "axis": "context_relevance",
-     "mean": 0.69, "std": 0.05, "runs": [0.75, 0.67, 0.67], "scored": 6, "errors": 0, "dropped": 0}
+     "mean": 0.70, "std": 0.05, "runs": [0.75, 0.67, 0.67], "scored": 6, "errors": 0, "dropped": 0}
   ],
   "by_axis": {
     "groundedness": {
@@ -67,10 +67,10 @@ Per-verdict details are only in the JSON file.
 | `judge`, `embedding` | Models and settings used. Scores depend on the judge, so check these when comparing results |
 | `metrics` | Metrics that ran, with the options actually used, including defaults |
 | `dataset` | Short hash of the samples; equal values mean the same data |
-| `fingerprints` | For the Chaejeom metrics: hashes of the domain file and custom prompt used, and the prompt requests |
+| `fingerprints` | For the Chaejeom metrics: a hash of the domain file, or, when a custom prompt replaces it, a hash of that prompt and its requests |
 | `repeats` | Number of runs |
 | `summary` | Per metric: `mean`, `std` and per-run `runs`; `scored` results; `errors`; and `dropped`, samples left out of the run statistics because they lacked a score in some run |
-| `by_axis` | Axis × framework table. `average` is the mean of the RAGAS, DeepEval and TruLens metrics on that axis |
+| `by_axis` | Axis-by-framework table. `average` is the mean of the RAGAS, DeepEval and TruLens metrics on that axis |
 | `cost` | Totals for the whole run, with the same fields as a metric result's `cost` |
 | `samples` | Per sample: `id` and `metadata` from the input, per-metric `scores` across runs, and every `MetricResult` |
 
@@ -89,7 +89,7 @@ Per-verdict details are only in the JSON file.
     {"type": "statement", "text": "...", "verdict": 0, "score": null, "reason": "...", "context_ids": []}
   ],
   "reason": "진술 3개 중 2개가 문맥에서 직접 추론됩니다.",
-  "cost": {"llm_calls": 2, "tokens": 1840, "cache_hits": 0, "input_tokens": 1620, "output_tokens": 220, "usd": 0.000375},
+  "cost": {"llm_calls": 2, "tokens": 1840, "cache_hits": 0, "input_tokens": 1620, "output_tokens": 220, "usd": 0.001},
   "error": null
 }
 ```
@@ -98,11 +98,11 @@ Per-verdict details are only in the JSON file.
 |---|---|
 | `source` | Framework, version and commit the metric was ported from, and a short description of its method |
 | `run` | Which run this result belongs to, starting at 1 |
-| `score` | 0 to 1, higher is better. `null` when it cannot be computed; this is different from 0 and is left out of means |
+| `score` | 0 to 1, higher is better (`ragas.response_relevancy` can rarely be below 0). `null` when it cannot be computed; this is different from 0 and is left out of means |
 | `raw_score`, `raw_scale` | The score on the original framework's scale, and a description of that scale |
 | `units` | Per-unit verdicts; see below |
 | `reason` | Explanation of the score, in Korean |
-| `cost` | LLM calls and tokens this metric used for this sample, responses reused from the cache, and the estimated cost in USD from the price table in `src/chaejeom/pricing.py`. Cached responses cost nothing; embedding calls are not counted |
+| `cost` | LLM calls and tokens this metric used for this sample, responses reused from the cache, and the estimated cost in USD from the price table in `src/chaejeom/pricing.py`. Cached responses cost nothing; embedding calls are not counted; stays 0 for models not in the price table |
 | `error` | Why the metric failed, such as a missing input or an unreadable response. `cost` still counts the calls made before the failure |
 
 ### Units by metric
@@ -115,12 +115,12 @@ Per-verdict details are only in the JSON file.
 | `deepeval.faithfulness` | truth (from contexts), claim (from the answer) | claims: yes / no / borderline | | for no and borderline | |
 | `deepeval.contextual_relevancy` | statement (from a context) | yes / no | | for no | that context |
 | `deepeval.answer_relevancy` | statement (from the answer) | yes / no / borderline | | for no and borderline | |
-| `trulens.groundedness` | sentence (from the answer) | | 0–3 | supporting evidence | |
-| `trulens.context_relevance` | chunk | | 0–3 | criteria and supporting evidence | that context |
+| `trulens.groundedness` | sentence (from the answer) | | 0 to 3 | supporting evidence | |
+| `trulens.context_relevance` | chunk | | 0 to 3 | supporting evidence | that context |
 | `trulens.answer_relevance` | none | | | | |
 | `chaejeom.groundedness` | statement, with `core` | supported / unsupported / contradicted | | reason and the quoted context | the cited contexts |
 | `chaejeom.context_relevance` | chunk | relevant / partial / irrelevant | | reason | that context |
-| `chaejeom.answer_relevance` | judge (how the answer responds), statement (unrelated parts) | direct / indirect / other_aspect / off_topic / evasive / declined | | reason | |
+| `chaejeom.answer_relevance` | judge (how the answer responds), statement (unrelated parts) | judge: direct / indirect / other_aspect / off_topic / evasive / declined; statement: irrelevant | | reason (judge only) | |
 
 Verdict values are kept as in the original frameworks.
 
@@ -139,6 +139,7 @@ cost grow with the number of runs.
 
 ## Cost estimate
 
-Before a run, the CLI shows a rough estimate from token counts measured on the example data, scaled to the length of
-your samples and, for metrics that judge chunks or answer sentences one by one, to how many there are. The estimate
+Before a run, the CLI shows a rough estimate when the judge model's price is known. It starts from token counts
+measured on the example data and scales them to the length of your samples and, for metrics whose calls or output
+grow with the number of chunks or answer sentences, to how many there are. The estimate
 assumes nothing is cached. Use `--limit` or `/run n` to measure the real cost on a few samples first.

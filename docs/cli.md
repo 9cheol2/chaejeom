@@ -6,7 +6,7 @@ Chaejeom installs one command under three names: `chaejeom`, `Chaejeom` and `채
 
 | Command | What it does |
 |---|---|
-| `chaejeom` | Opens the interactive terminal. `-c FILE` starts it with a config file |
+| `chaejeom` | Opens the interactive terminal. `-c FILE` (or `--config FILE`) starts it with a config file |
 | `chaejeom run` | Runs one evaluation from a config file and a data file |
 | `chaejeom compare` | Compares two result files |
 | `chaejeom list` | Lists the metrics and the inputs each one needs |
@@ -31,12 +31,14 @@ chaejeom run --config examples/eval.yaml --data examples/samples.jsonl
 | `--no-cache` | Ignore cached responses and call the model again |
 
 Before evaluating, Chaejeom prints the estimated cost and warns when Chaejeom metrics run without a domain file or
-when text would be sent to a different endpoint than the judge. Afterwards it prints the axis × framework table, the
+when text would be sent to a different endpoint than the judge. Afterwards it prints the axis-by-framework table, the
 per-metric scores, and the actual token usage and cost.
 
-`chaejeom run` exits with code 1 and writes no result file when every evaluation failed, for example because the API
-key or the model name is wrong, so a CI job can catch it. It exits with code 2 when `--data` is omitted and `input/`
-does not hold exactly one data file.
+`chaejeom run` exits with code 0 on success. It exits with code 2 when `--data` is omitted and `input/` does not hold
+exactly one data file, and with code 1 on any other error: an invalid config, an unknown metric or option, a data
+format error, a missing file, a provider error, or `--runs` or `--limit` below 1. When every evaluation failed, for
+example because the API key or the model name is wrong, it also exits with code 1 and writes no result file, so a CI
+job can catch it.
 
 ## `chaejeom compare`
 
@@ -45,8 +47,9 @@ chaejeom run --config eval.yaml --data samples.jsonl --label "retriever v1.3" --
 chaejeom compare v1.2.json v1.3.json
 ```
 
-`compare` shows the axis × framework scores of both results with the change, then the samples whose score moved by
-0.25 or more. Samples are matched by `id`, so give your samples stable ids.
+`compare` shows the axis-by-framework scores of both results with the change, then the samples whose score moved by
+0.25 or more: up to 10 per metric, largest change first. Samples are matched by `id`, so give your samples
+stable ids; `compare` reports how many could not be matched.
 
 It warns when the two results are not directly comparable: different data, a different judge or embedding model,
 a different domain file or custom prompt, a different number of runs, or metrics present in only one file. Each
@@ -65,7 +68,7 @@ Type `/` to open the command menu, or type a data file path to load it. The inte
 | Command | What it does |
 |---|---|
 | `/data [file]` | Load evaluation data. Typing a path alone does the same; without a path, you pick a file in `input/` or type a path with Tab completion |
-| `/metrics [ids]` | Select metrics and the number of runs on an axis × framework grid |
+| `/metrics [ids]` | Select metrics and the number of runs on an axis-by-framework grid |
 | `/model [model] [value]` | Select the judge model, then its temperature or reasoning effort |
 | `/temperature [0-2]` | Set the judge temperature. Shown only for non-reasoning models |
 | `/effort [low\|medium\|high]` | Set the judge reasoning effort. Shown only for reasoning models |
@@ -78,7 +81,7 @@ Type `/` to open the command menu, or type a data file path to load it. The inte
 | `/config [file\|save]` | Load a config file, or save the current settings as one |
 | `/language [en\|ko]` | Select the interface language; remembered for the next start |
 | `/help` | Show all commands |
-| `/exit` | Exit. Pressing Ctrl+C twice on an empty input also exits |
+| `/exit` | Exit. `/quit`, `exit`, `quit`, Ctrl+D, or Ctrl+C twice on an empty input also exit |
 
 Leave the value out and most commands open a picker or an input box. Pressing Enter on a partial command runs it only
 when it matches a single command, so `/r` does not start `/run` by accident.
@@ -86,7 +89,8 @@ when it matches a single command, so `/r` does not start `/run` by accident.
 ### Selecting metrics
 
 `/metrics` opens a grid with one row per axis and one column per framework. Move with the arrow keys and press Space
-to toggle a cell, a whole axis, a whole framework, or everything; set the number of runs on the `Runs` row with ←→.
+to toggle a cell, a whole axis, a whole framework, or everything; set the number of runs, from 1 to 20, on the `Runs` row
+with the left and right arrow keys.
 You can also pass metric ids directly, for example `/metrics ragas.*,chaejeom.groundedness`. The line under the input
 box always shows the current selection.
 
@@ -119,7 +123,8 @@ choose *Show the full prompt* to read all of it.
 
 - **RAGAS, DeepEval, TruLens**: read-only, as ported from the original frameworks.
 - **Chaejeom**: choose *Edit with a request* and describe the change. The prompt is revised to match and saved to
-  `prompts/<metric>.yaml`, and the next `/run` uses it. What the metric measures and the output format stay the same.
+  `prompts/<metric id>.yaml` (for example `prompts/chaejeom.groundedness.yaml`), or over the prompt file already in
+  use, and the next `/run` uses it. What the metric measures and the output format stay the same.
   With a domain set, the edit starts from the domain's prompt.
   You can also load a prompt file or reset to the default.
 
@@ -135,8 +140,10 @@ run stops with one clear message instead of saving a table of errors.
 Below the score tables, *Samples without a score* lists each sample a metric left unscored, in how many runs, and
 why. Most are by design, such as an answer with no factual statement for groundedness; errors are shown in red.
 
-`/show` lists the samples with their score on each axis, lowest average first, and flags samples with a missing
-score or an error (`/show all` lists every sample). `/show q08` opens one sample: its scores, then each verdict and
-its reason. `/show q08 chaejeom` or `/show q08 groundedness` narrows it to a framework or an axis. With several runs,
-a metric whose runs differ shows each run's score next to it. `/config save` writes the current
-models, metrics, domain file and prompts to a config file that `/config <file>` or `chaejeom -c <file>` loads again.
+`/show` lists the 15 samples with the lowest average score, with their score on each axis, and flags samples with a
+missing score or an error (`/show all` lists every sample). `/show q08` opens one sample by id, or by its
+position in the data counting from 0: its scores, then each verdict and its reason. `/show q08 chaejeom` or `/show q08 groundedness` narrows it to a framework or an axis; a full
+metric id such as `chaejeom.groundedness` also works. With several runs,
+a metric whose runs differ shows each run's score next to it. `/config save <file>` writes the current
+models, metrics, domain file and prompts to that file (without a path, it asks, suggesting `chaejeom.yaml`);
+`/config <file>` or `chaejeom -c <file>` loads it again.

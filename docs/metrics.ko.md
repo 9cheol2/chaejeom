@@ -5,31 +5,35 @@
 채점은 RAG 시스템을 세 축으로 평가합니다. 모든 지표가 레퍼런스 프리라서 정답 없이 질문, 검색된 문맥, 답변만
 있으면 됩니다.
 
-| 축 | 묻는 것 |
+| 축 (보는 입력) | 묻는 것 |
 |---|---|
-| 근거성 (문맥 → 답변) | 답변의 내용이 검색된 문맥으로 뒷받침되는가? |
-| 문맥 관련성 (질문 → 문맥) | 검색이 질문에 필요한 것을 가져왔는가? |
-| 답변 관련성 (질문 → 답변) | 답변이 질문에 답하는가? |
+| 근거성 (문맥, 답변) | 답변의 내용이 검색된 문맥으로 뒷받침되는가? |
+| 문맥 관련성 (질문, 문맥) | 검색이 질문에 필요한 것을 가져왔는가? |
+| 답변 관련성 (질문, 답변) | 답변이 질문에 답하는가? |
 
 ## 한눈에 보기
 
 | 축 | 지표 id | 방식 | 척도 |
 |---|---|---|---|
-| 근거성 | [`ragas.faithfulness`](https://github.com/vibrantlabsai/ragas/tree/4ecab384fda829ca50bec3f07cc49589d756e172/src/ragas/metrics/collections/faithfulness) | 답변을 진술로 나눠 문맥에서 추론되는 진술의 비율을 셈 | 0~1 |
-| | [`deepeval.faithfulness`](https://github.com/confident-ai/deepeval/tree/29dcf5f24397715a60348c1e41e7d416a3b2d6c8/deepeval/metrics/faithfulness) | 문맥에서 사실을, 답변에서 주장을 뽑아 사실과 모순되는 주장을 감점 | 0~1 |
-| | [`trulens.groundedness`](https://github.com/truera/trulens/blob/1f65a310cd5bdaef3ea7be76e98022f574cea39c/src/feedback/trulens/feedback/llm_provider.py#L3347) | 답변 문장마다 문맥에 비춰 점수를 매김 | 0~3, 0~1로 환산 |
+| 근거성 | [`ragas.faithfulness`](https://github.com/vibrantlabsai/ragas/tree/4ecab384fda829ca50bec3f07cc49589d756e172/src/ragas/metrics/collections/faithfulness) | 답변을 진술로 나눠 문맥에서 추론되는 진술의 비율을 셈 | 0에서 1 |
+| | [`deepeval.faithfulness`](https://github.com/confident-ai/deepeval/tree/29dcf5f24397715a60348c1e41e7d416a3b2d6c8/deepeval/metrics/faithfulness) | 문맥에서 사실을, 답변에서 주장을 뽑아 사실과 모순되는 주장을 감점 | 0에서 1 |
+| | [`trulens.groundedness`](https://github.com/truera/trulens/blob/1f65a310cd5bdaef3ea7be76e98022f574cea39c/src/feedback/trulens/feedback/llm_provider.py#L3347) | 답변 문장마다 문맥에 비춰 점수를 매김 | 0에서 3, 0에서 1로 환산 |
 | | [`chaejeom.groundedness`](../src/chaejeom/metrics/chaejeom/groundedness.py) | 진술마다 근거와 핵심 여부를 표시하고 규칙으로 단계를 정함 | 5단계 |
-| 문맥 관련성 | [`ragas.context_relevance`](https://github.com/vibrantlabsai/ragas/tree/4ecab384fda829ca50bec3f07cc49589d756e172/src/ragas/metrics/collections/context_relevance) | 판정 프롬프트 두 개가 문맥 전체를 평가 | 0~2, 0~1로 환산 |
-| | [`deepeval.contextual_relevancy`](https://github.com/confident-ai/deepeval/tree/29dcf5f24397715a60348c1e41e7d416a3b2d6c8/deepeval/metrics/contextual_relevancy) | 문맥마다 진술을 뽑아 관련 있는 진술의 비율을 셈 | 0~1 |
-| | [`trulens.context_relevance`](https://github.com/truera/trulens/blob/1f65a310cd5bdaef3ea7be76e98022f574cea39c/src/feedback/trulens/feedback/llm_provider.py#L727) | 문맥 조각마다 점수를 매김 | 0~3, 0~1로 환산 |
+| 문맥 관련성 | [`ragas.context_relevance`](https://github.com/vibrantlabsai/ragas/tree/4ecab384fda829ca50bec3f07cc49589d756e172/src/ragas/metrics/collections/context_relevance) | 판정 프롬프트 두 개가 문맥 전체를 평가 | 0에서 2, 0에서 1로 환산 |
+| | [`deepeval.contextual_relevancy`](https://github.com/confident-ai/deepeval/tree/29dcf5f24397715a60348c1e41e7d416a3b2d6c8/deepeval/metrics/contextual_relevancy) | 문맥마다 진술을 뽑아 관련 있는 진술의 비율을 셈 | 0에서 1 |
+| | [`trulens.context_relevance`](https://github.com/truera/trulens/blob/1f65a310cd5bdaef3ea7be76e98022f574cea39c/src/feedback/trulens/feedback/llm_provider.py#L727) | 문맥 조각마다 점수를 매김 | 0에서 3, 0에서 1로 환산 |
 | | [`chaejeom.context_relevance`](../src/chaejeom/metrics/chaejeom/context_relevance.py) | 조각마다 답을 담았는지, 같은 대상인지, 관련 없는지 표시하고 규칙으로 단계를 정함 | 5단계 |
-| 답변 관련성 | [`ragas.response_relevancy`](https://github.com/vibrantlabsai/ragas/tree/4ecab384fda829ca50bec3f07cc49589d756e172/src/ragas/metrics/collections/answer_relevancy) | 답변에서 질문을 만들어 원래 질문과 임베딩 유사도를 비교 | -1~1 |
-| | [`deepeval.answer_relevancy`](https://github.com/confident-ai/deepeval/tree/29dcf5f24397715a60348c1e41e7d416a3b2d6c8/deepeval/metrics/answer_relevancy) | 답변을 진술로 나눠 관련 있는 진술의 비율을 셈 | 0~1 |
-| | [`trulens.answer_relevance`](https://github.com/truera/trulens/blob/1f65a310cd5bdaef3ea7be76e98022f574cea39c/src/feedback/trulens/feedback/llm_provider.py#L1121) | 답변 전체에 점수를 매김 | 0~3, 0~1로 환산 |
+| 답변 관련성 | [`ragas.response_relevancy`](https://github.com/vibrantlabsai/ragas/tree/4ecab384fda829ca50bec3f07cc49589d756e172/src/ragas/metrics/collections/answer_relevancy) | 답변에서 질문을 만들어 원래 질문과 임베딩 유사도를 비교 | -1에서 1 |
+| | [`deepeval.answer_relevancy`](https://github.com/confident-ai/deepeval/tree/29dcf5f24397715a60348c1e41e7d416a3b2d6c8/deepeval/metrics/answer_relevancy) | 답변을 진술로 나눠 관련 있는 진술의 비율을 셈 | 0에서 1 |
+| | [`trulens.answer_relevance`](https://github.com/truera/trulens/blob/1f65a310cd5bdaef3ea7be76e98022f574cea39c/src/feedback/trulens/feedback/llm_provider.py#L1121) | 답변 전체에 점수를 매김 | 0에서 3, 0에서 1로 환산 |
 | | [`chaejeom.answer_relevance`](../src/chaejeom/metrics/chaejeom/answer_relevance.py) | 답변이 질문에 응한 방식을 표시하고 규칙으로 단계를 정함 | 5단계 |
 
-결과의 점수는 모두 0~1이고 높을수록 좋습니다. 원본 척도의 점수는 `raw_score`에 남습니다. `chaejeom list`로 지표와
-각 지표에 필요한 입력을 볼 수 있습니다.
+결과의 점수는 0에서 1 사이이고 높을수록 좋습니다. 예외는 `ragas.response_relevancy` 하나로, 코사인 유사도를 그대로
+써서 드물게 0보다 작을 수 있습니다. 원본 프레임워크 지표는 원본 척도의 점수를 `raw_score`에 남기고, 채점 지표는 이
+값을 비워 둡니다.
+
+임베딩 모델이 필요한 지표는 `ragas.response_relevancy`뿐입니다. `chaejeom list`로 지표와 각 지표에 필요한 입력을 볼
+수 있습니다. 필요한 입력이 비어 있으면 점수 대신 오류를 남깁니다.
 
 ## 한국어 기준으로 준비
 
@@ -50,6 +54,10 @@ RAGAS, DeepEval, TruLens 지표는 [README](../README.ko.md#원본-버전)에 �
 [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)에 적었습니다. 원본 지표의 프롬프트는 채점에서 고칠 수 없으므로,
 점수는 원본 프레임워크가 재는 것과 같은 의미를 유지합니다.
 
+알아 둘 동작이 두 가지 있습니다. DeepEval Faithfulness와 AnswerRelevancy는 원본 기본값대로 `borderline` 판정을
+통과로 셉니다. 또 원본과 달리, 응답이 요구한 JSON 형식에 맞지 않으면 채점의 클라이언트가 다시 요청합니다(모두 합쳐
+최대 세 번). `ragas.context_relevance`는 이 재요청을 끄고 원본의 재시도만 씁니다.
+
 ## 채점 지표
 
 채점 지표는 같은 세 축을 보고 샘플마다 0, 0.25, 0.5, 0.75, 1.0의 다섯 단계로 점수를 매깁니다. 판정 모델은 확인할
@@ -66,14 +74,17 @@ RAGAS, DeepEval, TruLens 지표는 [README](../README.ko.md#원본-버전)에 �
 
 | 지표 | 판정 모델이 표시하는 것 | 단계 |
 |---|---|---|
-| 근거성 | 답변의 진술마다 문맥으로 뒷받침되는지, 문맥에 없는지, 문맥과 어긋나는지. 질문의 핵심 정보인지 | 1.0 모든 진술이 뒷받침됨<br>0.75 문맥에 없는 진술이 부수 정보뿐<br>0.5 문맥에 없는 핵심 진술이 있음<br>0.25 문맥과 어긋나는 진술이 있음<br>0 뒷받침되는 핵심 진술이 없음 |
+| 근거성 | 답변의 진술마다 문맥으로 뒷받침되는지, 문맥에 없는지, 문맥과 어긋나는지. 질문의 핵심 정보인지 | 1.0 모든 진술이 뒷받침됨<br>0 뒷받침되는 핵심 진술이 없음<br>0.25 뒷받침되는 핵심 진술은 있지만 문맥과 어긋나는 진술이 있음<br>0.5 뒷받침되는 핵심 진술은 있지만 문맥에 없는 핵심 진술도 있음<br>0.75 핵심 진술은 모두 뒷받침되고 문맥에 없는 진술은 부수 정보뿐 |
 | 문맥 관련성 | 문맥 조각마다 질문이 묻는 대상을 다루는지, 답을 담고 있는지 | 1.0 답이 든 조각이 있고 관련 없는 조각이 없음<br>0.75 답이 든 조각이 있고 관련 없는 조각이 절반 미만<br>0.5 답이 든 조각이 있지만 관련 없는 조각이 절반 이상<br>0.25 답이 든 조각은 없지만 같은 대상을 다루는 조각이 있음<br>0 관련 있는 조각이 없음 |
 | 답변 관련성 | 답을 피하는지, 자료에 없다고 밝히는지, 같은 대상을 다루는지, 직접 답하는지 | 1.0 직접 답함<br>0.75 직접 답하지만 관계없는 내용이 있음<br>0.5 일반적인 설명이나 조건만 말함<br>0.25 같은 주제의 다른 것을 답함<br>0 다른 주제를 답하거나 답을 피함<br>점수 없음: 자료에 없다고 밝힘 |
+
+근거성은 위의 규칙을 위에서부터 차례로 보고, 처음 맞는 규칙으로 단계를 정합니다. 판정 모델이 핵심 진술을 하나도
+표시하지 않으면 모든 진술을 핵심으로 봅니다.
 
 ### 판정을 믿을 수 있게 하는 장치
 
 - **인용 확인.** 판정 모델이 근거로 든 문장은 검색된 문맥에 실제로 있어야 합니다(띄어쓰기, 전각 문자, 따옴표
-  차이는 무시). 판정 모델이 한국어 문장을 옮길 때 연결 어미를 바꾸거나 긴 문장의 중간을 건너뛰는 일이 많아서, 한
+  차이는 무시). 이를 정리한 뒤 다섯 글자 미만인 인용은 받지 않습니다. 판정 모델이 한국어 문장을 옮길 때 연결 어미를 바꾸거나 긴 문장의 중간을 건너뛰는 일이 많아서, 한
   조각 안에서 순서대로 이어지는 부분 두 개 이하가 인용의 90% 이상을 덮으면 인정합니다. 단, 인용 속 숫자는 모두 그
   조각에 있어야 합니다. 이 조건을 못 채우면 문맥에 없는 진술로 보고 그 이유를 결과에 남깁니다. 뒷받침된 진술의 수치가 인용한 조각에
   보이지 않으면 판정은 그대로 두고 "확인 필요"로 표시합니다. 답변이 증감률처럼 값을 계산하거나, 기간이 조각
@@ -86,6 +97,8 @@ RAGAS, DeepEval, TruLens 지표는 [README](../README.ko.md#원본-버전)에 �
   봅니다. 낡은 문서를 가져온 것은 근거성이 아니라 문맥 관련성의 문제입니다.
 - **연락처도 확인.** "1588-0000으로 전화 주세요"처럼 값이 있는 안내는 문맥과 대조합니다. "고객센터로 문의해
   주세요" 같은 일반 안내는 판정하지 않습니다.
+- **빠뜨린 항목은 다시 확인.** 판정 모델이 진술이나 조각 번호를 빠뜨리면 한 번 더 묻고, 그래도 빠지면 오류로
+  남깁니다.
 - **오해를 부르는 점수는 내지 않음.** 사실 진술이 없는 답변("잘 모르겠습니다"나 문의처 안내만 한 경우 등)에는
   근거성 점수를 매기지 않습니다. 답을 피한 것은 답변 관련성에서 감점합니다.
 
@@ -93,20 +106,25 @@ RAGAS, DeepEval, TruLens 지표는 [README](../README.ko.md#원본-버전)에 �
 
 맞는 판정이 도메인에 따라 다를 수 있습니다. 주식 정보 서비스에서 메모리 반도체를 물었을 때 HBM으로 답하면 맞는
 답이지만, 낸드를 물었는데 HBM으로 답하면 다른 대상을 답한 것입니다. 도메인 정보 파일은 이런 기준을 지표마다
-사용자의 말로 적고, 채점은 그 기준을 해당 지표의 판정 프롬프트에 글자 그대로 넣습니다.
+사용자의 말로 적고, 채점은 그 기준을 문구를 바꾸지 않고 문장마다 한 줄씩 해당 지표의
+판정 프롬프트에 넣습니다.
 
 서비스는 판정 모델의 역할 문장에, 기준은 [절차] 뒤의 "[이 도메인의 판정 기준]" 부분에 들어가며, 둘이 다르면
 도메인 기준을 따르게 합니다. 프롬프트의 나머지는 바뀌지 않으므로 도메인이 있든 없든 표시와 다섯 단계 규칙의 뜻은
 같습니다. LLM이 프롬프트를 고쳐 쓰지 않고 코드가 문장을 넣는 이유는, 시험해 보니 LLM이 사용자가 말하지 않은
 규칙을 지어내고 상관없는 기본 규칙을 지웠기 때문입니다.
 
-도메인 기준은 무엇을 같은 대상으로 보고 무엇을 정확히 볼지를 정할 뿐, 무엇이 사실인지는 정하지 않습니다. 항목에는
-정답이 될 수 있는 값을 넣지 않고, 사실은 늘 검색된 문맥만으로 판단합니다. 따라서 점수는 도메인에 맞는 쪽으로
+도메인 기준은 무엇을 같은 대상으로 보고 무엇을 정확히 볼지를 정할 뿐, 무엇이 사실인지는 정하지 않습니다. `/domain`은
+정답이 될 수 있는 값을 빼도록 요청하고, 값이 남아 있으면 파일을 저장하지 않습니다. 사실은 늘 검색된 문맥만으로
+판단합니다. 따라서 점수는 도메인에 맞는 쪽으로
 오를 수도 내릴 수도 있습니다.
 
 도메인 정보 파일은 대화형 터미널의 `/domain`으로 만듭니다. [설정](configuration.ko.md#도메인-정보-파일)을 보세요.
 채점 지표의 프롬프트는 `/prompt`에서 원하는 내용을 적어 고칠 수도 있습니다.
-[설정](configuration.ko.md#프롬프트-파일)을 보세요.
+[설정](configuration.ko.md#프롬프트-파일)을 보세요. 수정본 프롬프트를 쓰는 지표에는 도메인 정보 파일이 적용되지
+않습니다.
+
+도메인 기준 평가는 실험 기능이며 지금 테스트하고 있습니다.
 
 ## 지표 고르기
 
@@ -137,14 +155,19 @@ RAGAS, DeepEval, TruLens 지표는 [README](../README.ko.md#원본-버전)에 �
 
 ### 예외 상황
 
-| 상황 | 결과 (원본과 같음) |
+| 상황 | 결과 |
 |---|---|
 | RAGAS Faithfulness가 진술을 찾지 못함 | 점수 없음 (`null`) |
 | DeepEval Faithfulness나 AnswerRelevancy가 주장이나 진술을 찾지 못함 | 1 |
 | DeepEval ContextualRelevancy가 진술을 찾지 못함 | 0 |
 | TruLens Groundedness가 사소한 문장을 빼고 나니 문장이 없음 | 0 |
 | RAGAS ResponseRelevancy | 코사인 유사도를 그대로 써서 드물게 0보다 작을 수 있음 |
+| RAGAS ResponseRelevancy: 만든 역질문이 모두 회피성이거나 하나도 만들지 못함 | 0 |
+| RAGAS ContextRelevance: 판정 프롬프트 둘 중 하나가 실패 | 나머지 하나의 점수만 씀. 둘 다 실패하면 `null` |
+| TruLens: 응답에서 점수를 읽지 못함 | 점수 없음, 오류를 남김 (원본은 -1) |
+| DeepEval: 판정이 모두 허용된 값이 아님 | 점수 없음, 오류를 남김 |
 | 채점 근거성이 사실 진술을 찾지 못함 | 점수 없음. 답을 피한 것은 답변 관련성에서 감점 |
 | 채점 답변 관련성에서 답변이 자료에 없다고 밝힘 | 점수 없음, 판정 `declined`. 그 말이 맞는지는 근거성이 판정 |
 
-점수 없음(`null`)은 0과 다르며 평균에서 빠집니다.
+RAGAS 행과 위쪽의 DeepEval, TruLens 행은 원본 프레임워크와 같습니다. 오류를 남기는 두 행은 원본에서는 오류 대신
+대체 값을 돌려줍니다. 점수 없음(`null`)은 0과 다르며 평균에서 빠집니다.
